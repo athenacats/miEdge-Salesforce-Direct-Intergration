@@ -402,6 +402,16 @@ def main():
             color:  #34dfa9 !important;
         }
                 
+        #MainMenu {
+         visibility: hidden;
+                }
+        footer {
+                visibility: hidden;
+        }
+        header {
+                visibility: hidden;
+        }
+                
         a._container_gzau3_1._viewerBadge_nim44_23 {
             display: none !important;
         }
