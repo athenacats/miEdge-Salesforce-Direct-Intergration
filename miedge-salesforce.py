@@ -403,11 +403,11 @@ def main():
         }
                 
         a._container_gzau3_1._viewerBadge_nim44_23 {
-            display: none;
+            display: none !important;
         }
 
         ._profileContainer_gzau3_53 {
-            display: none;
+            display: none !important;
         }
 
         .st-emotion-cache-b0y9n5:hover {
