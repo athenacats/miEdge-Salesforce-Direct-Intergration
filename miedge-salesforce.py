@@ -6,10 +6,10 @@ from simple_salesforce import Salesforce
 import io
 import warnings
 import os
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+
+
+
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -21,16 +21,11 @@ st.set_option('client.showErrorDetails', False)
 # =======================
 # Salesforce OAuth2 Details (Hardcoded)
 # =======================
-if not st.secrets:  # This means we're running locally
-    load_dotenv()
-    CLIENT_ID = os.getenv('SALESFORCE_CLIENT_ID')
-    CLIENT_SECRET = os.getenv('SALESFORCE_CLIENT_SECRET')
-else:
-    # On Streamlit Cloud, use st.secrets
-    CLIENT_ID = st.secrets["salesforce"]["client_id"]
-    CLIENT_SECRET = st.secrets["salesforce"]["client_secret"]
-    
-REDIRECT_URI = 'http://localhost:8502'
+
+CLIENT_ID = st.secrets["salesforce"]["client_id"]
+CLIENT_SECRET = st.secrets["salesforce"]["client_secret"]
+
+REDIRECT_URI = 'https://esi-miedge-salesforce-direct-intergration.streamlit.app/'
 # AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
 # TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
 AUTH_URL = 'https://test.salesforce.com/services/oauth2/authorize'
