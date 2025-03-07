@@ -445,6 +445,8 @@ def main():
     # Capture OAuth2 Authorization Code from URL
     query_params = st.experimental_get_query_params()
     auth_code = query_params.get("code", [None])[0]
+    st.write("🔍 Query Params After Auth:", query_params)
+    st.write("🔍 Query Params After Auth:", auth_code)
 
     # Save the auth_code in session_state to avoid losing it on rerun
     if auth_code and st.session_state.auth_code is None:
