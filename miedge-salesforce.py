@@ -376,7 +376,6 @@ def main():
             <h1 style="margin: 0;">ESI miEdge-Salesforce Integration</h1>
         </div>
     """, unsafe_allow_html=True)
-    st.write(f"🔗 Redirecting to Salesforce: {AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}")
 
     st.write("Authenticate with **Salesforce** first, then upload your **Excel/CSV** file and push data.")
 
@@ -444,8 +443,7 @@ def main():
     # Capture OAuth2 Authorization Code from URL
     query_params = st.experimental_get_query_params()
     auth_code = query_params.get("code", [None])[0]
-    st.write("🔍 Query Params After Auth:", query_params)
-    st.write("🔍 Query Params After Auth:", auth_code)
+   
 
     # Save the auth_code in session_state to avoid losing it on rerun
     if auth_code and st.session_state.auth_code is None:
@@ -458,12 +456,16 @@ def main():
         st.header("🔐 Connect to Salesforce")
         if not st.session_state.auth_code:
             auth_link = f"{AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
-            st.write(f"[🔗 Click here to connect to Salesforce]({auth_link})")
+            
+            if st.button("🔗 Connect to Salesforce"):
+                js = f"window.location.href = '{auth_link}'"
+                st.markdown(f'<script>{js}</script>', unsafe_allow_html=True)
         else:
             sf = get_salesforce_token(st.session_state.auth_code)
             if sf:
                 st.session_state.salesforce = sf
                 st.rerun()  # Rerun app after successful auth
+
 
     # ================================
     # Step 2: File Upload and Processing
