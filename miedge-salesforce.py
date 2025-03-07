@@ -459,7 +459,7 @@ def main():
 
             # This looks like a button but it's actually a styled <a> link
             st.markdown(f"""
-                <a href="{auth_link}" target="_self">
+                <a href="{auth_link}">
                     <button style="
                         background-color:#34dfa9;
                         color:black;
