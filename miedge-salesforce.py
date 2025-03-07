@@ -379,6 +379,7 @@ def main():
             <h1 style="margin: 0;">ESI miEdge-Salesforce Integration</h1>
         </div>
     """, unsafe_allow_html=True)
+
     st.write("Authenticate with **Salesforce** first, then upload your **Excel/CSV** file and push data.")
 
     st.markdown("""
@@ -411,28 +412,26 @@ def main():
             color: white !important;
         }
         ::-webkit-scrollbar:focus {
-        border: 1px solid #34dfa9 !important;        
+            border: 1px solid #34dfa9 !important;        
         }
-                
         .st-ee {
             border-right-color: #34dfa9 !important;  
         }
         .st-eg {
             border-bottom-color: #34dfa9 !important;  
         }
-                
         .st-ef {
             border-top-color: #34dfa9 !important;
         }
-                
         .st-ed {
-              border-left-color:   #34dfa9 !important;
+            border-left-color:   #34dfa9 !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-
-    # Initialize session state for Salesforce auth and uploaded file
+    # ===============================
+    # Initialize session state if missing
+    # ===============================
     if 'salesforce' not in st.session_state:
         st.session_state.salesforce = None
 
@@ -442,85 +441,92 @@ def main():
     if 'auth_code' not in st.session_state:
         st.session_state.auth_code = None
 
-    # Capture OAuth2 Authorization Code from URL
-    query_params = st.experimental_get_query_params()
+    # ===============================
+    # Handle OAuth2 Callback (Query Params)
+    # ===============================
+    query_params = st.query_params  # This is the correct modern way
     auth_code = query_params.get("code", [None])[0]
-    st.write("🔍 Query Params After Auth:", query_params)
-    st.write("🔍 Query Params After Auth:", auth_code)
 
-    # Save the auth_code in session_state to avoid losing it on rerun
+    # Log for debugging (optional)
+    st.write("🔍 Current Query Params:", query_params)
+
+    # If we got a new auth code from Salesforce, capture it into session state
     if auth_code and st.session_state.auth_code is None:
         st.session_state.auth_code = auth_code
 
-    # ================================
+    # ===============================
     # Step 1: Salesforce Authentication
-    # ================================
+    # ===============================
     if st.session_state.salesforce is None:
         st.header("🔐 Connect to Salesforce")
+
         if not st.session_state.auth_code:
             if st.button("🔗 Connect to Salesforce"):
                 initiate_salesforce_auth()
-        else:
+
+        elif st.session_state.auth_code and st.session_state.salesforce is None:
+            st.write("📥 Exchanging auth code for token...")
             sf = get_salesforce_token(st.session_state.auth_code)
+
             if sf:
                 st.session_state.salesforce = sf
-                st.rerun()  # Rerun app after successful auth
+                st.rerun()  # This refreshes app so we enter file upload step
+            else:
+                st.error("❌ Salesforce authentication failed. Please try again.")
+                st.session_state.auth_code = None  # Reset code so they can retry
 
-    # ================================
-    # Step 2: File Upload and Processing
-    # ================================
-    if st.session_state.salesforce:
-        st.success("✅ Connected to Salesforce!")
+        st.stop()  # Don't render the rest until Salesforce connected
 
-        # File uploader
-        uploaded_file = st.file_uploader("📤 Upload Excel/CSV File", type=["csv", "xlsx"])
+    # ===============================
+    # Step 2: File Upload & Processing
+    # ===============================
+    st.success("✅ Connected to Salesforce!")
 
-        if uploaded_file is not None:
-            try:
-                # Read the uploaded file
-                file_content = uploaded_file.getvalue()
-                if uploaded_file.name.endswith('.csv'):
-                    df = pd.read_csv(io.StringIO(file_content.decode('utf-8')), on_bad_lines='skip')
-                else:
-                    df = pd.read_excel(io.BytesIO(file_content))
+    uploaded_file = st.file_uploader("📤 Upload Excel/CSV File", type=["csv", "xlsx"])
 
-                st.success("✅ File Uploaded and Parsed Successfully!")
-                st.write("### 🔍 Preview Uploaded Data:")
-                st.dataframe(df)
+    if uploaded_file is not None:
+        try:
+            # Read and parse file
+            file_content = uploaded_file.getvalue()
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(io.StringIO(file_content.decode('utf-8')), on_bad_lines='skip')
+            else:
+                df = pd.read_excel(io.BytesIO(file_content))
 
-                # Extract and filter job titles
-                if 'Job Title' in df.columns:
-                    selected_titles, selected_peos = job_title_selector(df)
+            st.success("✅ File Uploaded and Parsed Successfully!")
+            st.write("### 🔍 Preview Uploaded Data:")
+            st.dataframe(df)
 
+            if 'Job Title' in df.columns:
+                selected_titles, selected_peos = job_title_selector(df)
 
-                    # Filter DataFrame based on selection
-                    filtered_df = df[df['Job Title'].isin(selected_titles) & df['PEO (Normalized)'].isin(selected_peos)]
-                    st.session_state.filtered_df = filtered_df
+                # Apply filters
+                filtered_df = df[df['Job Title'].isin(selected_titles) & df['PEO (Normalized)'].isin(selected_peos)]
+                st.session_state.filtered_df = filtered_df
 
-                    st.write(f"### ✅ Filtered Data (Showing {len(filtered_df)} of {len(df)} rows):")
-                    st.dataframe(filtered_df)
+                st.write(f"### ✅ Filtered Data (Showing {len(filtered_df)} of {len(df)} rows):")
+                st.dataframe(filtered_df)
 
+                # Download button
+                def convert_df_to_csv(df):
+                    return df.to_csv(index=False).encode('utf-8')
 
-                    # Download filtered data
-                    def convert_df_to_csv(df):
-                        return df.to_csv(index=False).encode('utf-8')
+                csv_data = convert_df_to_csv(filtered_df)
+                st.download_button(
+                    label="📥 Download Filtered Data as CSV",
+                    data=csv_data,
+                    file_name='filtered_executive_data.csv',
+                    mime='text/csv'
+                )
 
-                    csv_data = convert_df_to_csv(filtered_df)
-                    st.download_button(
-                        label="📥 Download Filtered Data as CSV",
-                        data=csv_data,
-                        file_name='filtered_executive_data.csv',
-                        mime='text/csv'
-                    )
-
-                    # Push to Salesforce
-                    selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead'])
-                    if st.button("🚀 Push Filtered Data to Salesforce"):
-                        push_to_salesforce(st.session_state.salesforce, filtered_df, selected_object)
-                else:
-                    st.error("❌ The uploaded file does not contain a 'Job Title' column.")
-            except Exception as e:
-                st.error(f"❌ Error processing the uploaded file: {e}")
+                # Push data to Salesforce
+                selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead'])
+                if st.button("🚀 Push Filtered Data to Salesforce"):
+                    push_to_salesforce(st.session_state.salesforce, filtered_df, selected_object)
+            else:
+                st.error("❌ The uploaded file does not contain a 'Job Title' column.")
+        except Exception as e:
+            st.error(f"❌ Error processing the uploaded file: {e}")
 
 
 if __name__ == "__main__":
