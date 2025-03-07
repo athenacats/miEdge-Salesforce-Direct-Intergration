@@ -415,6 +415,15 @@ def main():
         footer {
                 visibility: hidden !important;
         }
+                
+        footer:after {
+            content: " ";  /* You could even inject your own custom footer text here if you want */
+            visibility: visible;
+            display: block;
+            position: relative;
+            padding: 5px;
+            text-align: center;
+        }
         header {
                 visibility: hidden;
         }
