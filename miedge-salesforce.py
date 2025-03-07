@@ -7,6 +7,10 @@ import io
 import warnings
 import os
 
+st.set_page_config(
+    page_title="ESI miEdge-Salesforce Integration",  # This sets the title in the browser tab
+    page_icon="https://www.eesipeo.com/media/1-eESI_Logo_RevOut-1-4.png"  # This sets the favicon (can be an emoji or image URL)
+)
 
 
 
@@ -421,6 +425,10 @@ def main():
                 
         .st-ef {
             border-top-color: #34dfa9 !important;
+        }
+                
+        .st-ef {
+            border-bottom-color: #34dfa9 !important;
         }
                 
         .st-ed {
