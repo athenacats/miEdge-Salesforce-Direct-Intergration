@@ -457,8 +457,8 @@ def main():
     if st.session_state.salesforce is None:
         st.header("🔐 Connect to Salesforce")
         if not st.session_state.auth_code:
-            if st.button("🔗 Connect to Salesforce"):
-                initiate_salesforce_auth()
+            auth_link = f"{AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
+            st.write(f"[🔗 Click here to connect to Salesforce]({auth_link})")
         else:
             sf = get_salesforce_token(st.session_state.auth_code)
             if sf:
