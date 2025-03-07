@@ -1,0 +1,216 @@
+import streamlit as st
+import pandas as pd
+import re
+import requests
+from simple_salesforce import Salesforce
+import io
+
+# =======================
+# Salesforce OAuth2 Details (Hardcoded)
+# =======================
+CLIENT_ID = '3MVG9XgkMlifdwVDNiBseXcFdjN4oTKy4TKQBAjqSOFWmC96FNUze2H0Jnbp1uUwTX9UhEsFxVybQFzacnyuA'
+CLIENT_SECRET = '9B4E30BDDD1EEAD2D4074AE0AFF426C9EBF7AA0270858ECC503252E4E3781942'
+REDIRECT_URI = 'http://localhost:8502'
+AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
+TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
+
+# =======================
+# Helper Function to Initiate OAuth2 Flow (Meta Refresh Redirect)
+# =======================
+def initiate_salesforce_auth():
+    auth_link = f"{AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
+    meta_refresh = f"""
+    <meta http-equiv="refresh" content="0;url={auth_link}" />
+    """
+    st.markdown(meta_refresh, unsafe_allow_html=True)
+
+# =======================
+# Function to Exchange Auth Code for Access Token
+# =======================
+def get_salesforce_token(auth_code):
+    data = {
+        'grant_type': 'authorization_code',
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'code': auth_code,
+        'redirect_uri': REDIRECT_URI
+    }
+
+    response = requests.post(TOKEN_URL, data=data)
+    if response.status_code == 200:
+        token_data = response.json()
+        st.success("✅ Successfully authenticated with Salesforce!")
+        sf_instance = Salesforce(instance_url=token_data['instance_url'], session_id=token_data['access_token'])
+        st.session_state['salesforce'] = sf_instance  # 💾 Save Salesforce connection
+        return sf_instance
+    else:
+        st.error(f"❌ Salesforce Authentication Failed: {response.text}")
+        return None
+
+# =======================
+# Helper Function to Detect C-Level Titles
+# =======================
+def is_executive_title(title):
+    patterns = [
+        r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bCMO\b', r'\bCHRO\b', r'\bCLO\b', r'\bCPO\b', r'\bCRO\b',
+        r'\bVice President\b', r'\bVP\b', r'\bV\.P\.\b',
+        r'\bManaging Director\b', r'\bDirector\b', r'\bSenior Director\b', r'\bExecutive Director\b',
+        r'\bSenior\b', r'\bSr\.\b', r'\bPrincipal\b', r'\bLead\b', r'\bHead\b', r'\bChief\b',
+        r'\bPresident\b', r'\bPartner\b', r'\bOwner\b', r'\bFounder\b', r'\bChairman\b', r'\bExecutive\b', r'\bLeader\b',
+        r'\bManager\b', r'\bExecutive\b', r'\bMD\b'
+    ]
+
+    exclusion_patterns = [
+        r'\bHR\b', r'\bHuman Resources\b'
+    ]
+
+    if any(re.search(pattern, str(title), re.IGNORECASE) for pattern in patterns):
+        if not any(re.search(excl_pattern, str(title), re.IGNORECASE) for excl_pattern in exclusion_patterns):
+            return True
+
+    return False
+
+# =======================
+# Function to Push Data to Salesforce
+# =======================
+def push_to_salesforce(sf_instance, df, selected_object):
+    success_count = 0
+    for _, row in df.iterrows():
+        data = {
+            'FirstName': row.get('contact_first_name', ''),
+            'LastName': row.get('contact_last_name', ''),
+            'Company': row.get('company_name', ''),
+            'Email': row.get('email', ''),
+            'Phone': row.get('phone', ''),
+            'Title': row.get('job_title', ''),
+            'LeadSource': 'Streamlit App'
+        }
+        try:
+            sf_instance.__getattr__(selected_object).create(data)
+            success_count += 1
+        except Exception as e:
+            st.error(f"Error uploading record: {e}")
+
+    st.success(f"✅ Successfully pushed {success_count} records to Salesforce!")
+
+# =======================
+# Main Streamlit App
+# =======================
+def main():
+    st.title("📋 ESI-miEdge Job Title Scrubber with Salesforce OAuth2 Integration")
+    st.write("Upload your **Excel/CSV** file, auto-select **executive roles**, authenticate with **Salesforce**, and push data.")
+
+    # Initialize session state for uploaded file and filtered data
+    if 'uploaded_file_content' not in st.session_state:
+        st.session_state.uploaded_file_content = None
+
+    if 'filtered_df' not in st.session_state:
+        st.session_state.filtered_df = None
+
+    if 'salesforce' not in st.session_state:
+        st.session_state.salesforce = None
+
+    if 'auth_code' not in st.session_state:
+        st.session_state.auth_code = None
+
+    # Capture OAuth2 Authorization Code from URL
+    query_params = st.experimental_get_query_params()  # Using experimental version for better compatibility
+    auth_code = query_params.get("code", [None])[0]
+
+    # Save the auth_code in session_state to avoid losing it on rerun
+    if auth_code and st.session_state.auth_code is None:
+        st.session_state.auth_code = auth_code
+
+    # Step 1: Upload File
+    uploaded_file = st.file_uploader("📤 Upload Excel/CSV File", type=["csv", "xlsx"])
+
+    if uploaded_file is not None:
+        # Use getvalue() to read file content
+        file_content = uploaded_file.getvalue()
+
+        # Store file content in session state
+        st.session_state.uploaded_file_content = file_content
+        st.success(f"✅ Uploaded: {uploaded_file.name} ({uploaded_file.size} bytes)")
+
+        # Debug: Show first 500 bytes
+        st.write("### 🔍 File Preview (First 500 bytes):")
+        st.text(file_content[:500].decode('utf-8', errors='ignore'))
+
+        # Parse file to DataFrame
+        try:
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(io.StringIO(file_content.decode('utf-8')), on_bad_lines='skip')
+            else:
+                df = pd.read_excel(io.BytesIO(file_content))
+
+            st.success("✅ File Uploaded and Parsed Successfully!")
+
+            # Display Raw Data
+            with st.expander("🔍 View Raw Data"):
+                st.dataframe(df)
+
+            # Step 2: Extract and Filter Job Titles
+            if 'Job Title' in df.columns:
+                unique_job_titles = df['Job Title'].dropna().unique().tolist()
+                preselected_titles = [title for title in unique_job_titles if is_executive_title(title)]
+                st.write(f"### 🛠 Select Job Titles to Keep ({len(unique_job_titles)} found):")
+
+                selected_titles = st.multiselect(
+                    "✅ Pre-selected C-Level and Executive Titles (Adjust as Needed):",
+                    unique_job_titles,
+                    default=preselected_titles
+                )
+
+                filtered_df = df[df['Job Title'].isin(selected_titles)]
+                st.session_state.filtered_df = filtered_df
+
+                st.write(f"### ✅ Filtered Data (Showing {len(filtered_df)} of {len(df)} rows):")
+                st.dataframe(filtered_df)
+
+                # Download Filtered Data
+                def convert_df_to_csv(df):
+                    return df.to_csv(index=False).encode('utf-8')
+
+                csv_data = convert_df_to_csv(filtered_df)
+                st.download_button(
+                    label="📥 Download Filtered Data as CSV",
+                    data=csv_data,
+                    file_name='filtered_executive_data.csv',
+                    mime='text/csv'
+                )
+
+        except pd.errors.EmptyDataError:
+            st.error("❌ The uploaded file is empty or couldn't be parsed. Please upload a valid CSV/Excel file.")
+        except pd.errors.ParserError as e:
+            st.error(f"❌ Parsing error while reading the file: {e}")
+        except Exception as e:
+            st.error(f"❌ Error processing the uploaded file: {e}")
+
+    # Step 3: Salesforce Authentication Flow
+    st.write("### 🔐 Salesforce Login")
+    if not st.session_state.auth_code and st.session_state.salesforce is None:
+        if st.button("🔗 Connect to Salesforce"):
+            initiate_salesforce_auth()
+    elif st.session_state.auth_code and st.session_state.salesforce is None:
+        # Exchange the auth code for an access token
+        sf = get_salesforce_token(st.session_state.auth_code)
+        if sf:
+            st.session_state.salesforce = sf
+    elif st.session_state.salesforce and st.session_state.filtered_df is not None:
+        sf = st.session_state.salesforce
+        filtered_df = st.session_state.filtered_df
+
+        # Let user select Salesforce object to push data to
+        selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead', 'Contact', 'Account'])
+
+        if st.button("🚀 Push Filtered Data to Salesforce"):
+            push_to_salesforce(sf, filtered_df, selected_object)
+
+    # =======================
+    # Debugging: View Session State
+    # =======================
+    st.write("### 🛠 Session State Debugging:")
+    st.json(st.session_state)
+
+if __name__ == "__main__":
+    main()

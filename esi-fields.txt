@@ -1,0 +1,16 @@
+  data = {
+            'FirstName': row.get('Contact First Name', '') or 'Unknown',
+            'LastName': row.get('Contact Last Name', '') or 'Unknown',
+            'Company': row.get('Contact Company name', '') or 'Unknown',
+            'Email': row.get('Contact Email', ''),
+            'Phone': row.get('Contact Phone Number', ''),
+            'Title': row.get('Job Title', ''),
+            'LeadSource': 'MiEdge',  # Static for all records
+            'Current_Provider__c': row.get('Current Provider', ''),
+            'NumberOfEmployees': row.get('No. of Employees', ''),
+            'Account_Engagement_Score__c': row.get('Account Engagement Score', ''),
+            'Item_Number__c': row.get('Item Number', ''),
+            'Sort_Name__c': row.get('Sort Name', ''),
+            'Sort_Company__c': row.get('Sort Company', ''),
+            'Status': 'Open - Not Contacted'  # Default if not provided
+        }
