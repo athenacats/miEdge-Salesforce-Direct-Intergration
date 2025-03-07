@@ -21,8 +21,15 @@ st.set_option('client.showErrorDetails', False)
 # =======================
 # Salesforce OAuth2 Details (Hardcoded)
 # =======================
-CLIENT_ID = os.getenv('SALESFORCE_CLIENT_ID')
-CLIENT_SECRET = os.getenv('SALESFORCE_CLIENT_SECRET')
+if not st.secrets:  # This means we're running locally
+    load_dotenv()
+    CLIENT_ID = os.getenv('SALESFORCE_CLIENT_ID')
+    CLIENT_SECRET = os.getenv('SALESFORCE_CLIENT_SECRET')
+else:
+    # On Streamlit Cloud, use st.secrets
+    CLIENT_ID = st.secrets["salesforce"]["client_id"]
+    CLIENT_SECRET = st.secrets["salesforce"]["client_secret"]
+    
 REDIRECT_URI = 'http://localhost:8502'
 # AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
 # TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
