@@ -28,8 +28,8 @@ CLIENT_SECRET = st.secrets["salesforce"]["client_secret"]
 REDIRECT_URI = 'https://esi-miedge-salesforce-direct-intergration.streamlit.app'
 # AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
 # TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
-AUTH_URL = 'https://eesipeo--estherdev.sandbox.my.salesforce.com/services/oauth2/authorize'
-TOKEN_URL = 'https://eesipeo--estherdev.sandbox.my.salesforce.com/services/oauth2/token'
+AUTH_URL = 'https://test.salesforce.com/services/oauth2/authorize'
+TOKEN_URL = 'https://test.salesforce.com/services/oauth2/token'
 
 # =======================
 # Helper Function to Initiate OAuth2 Flow (Meta Refresh Redirect)
@@ -379,6 +379,8 @@ def main():
             <h1 style="margin: 0;">ESI miEdge-Salesforce Integration</h1>
         </div>
     """, unsafe_allow_html=True)
+    st.write(f"🔗 Redirecting to Salesforce: {AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}")
+
     st.write("Authenticate with **Salesforce** first, then upload your **Excel/CSV** file and push data.")
 
     st.markdown("""
