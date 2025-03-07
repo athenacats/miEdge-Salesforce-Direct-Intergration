@@ -36,10 +36,7 @@ TOKEN_URL = 'https://test.salesforce.com/services/oauth2/token'
 # =======================
 def initiate_salesforce_auth():
     auth_link = f"{AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
-    meta_refresh = f"""
-    <meta http-equiv="refresh" content="0;url={auth_link}" />
-    """
-    st.markdown(meta_refresh, unsafe_allow_html=True)
+    st.write(f"[🔗 Click here to connect to Salesforce]({auth_link})")
 
 def get_valid_picklist_values(sf_instance, object_name, field_name):
     describe = sf_instance.__getattr__(object_name).describe()
