@@ -456,10 +456,22 @@ def main():
         st.header("🔐 Connect to Salesforce")
         if not st.session_state.auth_code:
             auth_link = f"{AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
-            
-            if st.button("🔗 Connect to Salesforce"):
-                js = f"window.location.href = '{auth_link}'"
-                st.markdown(f'<script>{js}</script>', unsafe_allow_html=True)
+
+            # This looks like a button but it's actually a styled <a> link
+            st.markdown(f"""
+                <a href="{auth_link}" target="_self">
+                    <button style="
+                        background-color:#34dfa9;
+                        color:black;
+                        font-weight:bold;
+                        border:none;
+                        padding:12px 24px;
+                        border-radius:8px;
+                        cursor:pointer;
+                        font-size:16px;
+                    ">🔗 Connect to Salesforce</button>
+                </a>
+            """, unsafe_allow_html=True)
         else:
             sf = get_salesforce_token(st.session_state.auth_code)
             if sf:
