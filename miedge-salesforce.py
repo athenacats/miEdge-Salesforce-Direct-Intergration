@@ -383,6 +383,13 @@ def main():
 
     st.write("Authenticate with **Salesforce** first, then upload your **Excel/CSV** file and push data.")
 
+    from streamlit.components.v1 import html
+    html('''
+       <script>
+        window.top.document.querySelectorAll(`[href*="streamlit.io"]`).forEach(e => e.setAttribute("style", "display: none;"));
+      </script>
+    ''')
+
     st.markdown("""
         <style>
         div.stButton > button:first-child {
