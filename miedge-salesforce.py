@@ -418,11 +418,11 @@ def main():
             
                 
                 
-        a._container_gzau3_1._viewerBadge_nim44_23 {
+        ._container_gzau3_1 {
             display: none !important;
         }
 
-        ._profileContainer_gzau3_53 {
+        ._profilePreview_gzau3_63 {
             display: none !important;
         }
 
