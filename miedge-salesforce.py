@@ -383,12 +383,19 @@ def main():
 
     st.write("Authenticate with **Salesforce** first, then upload your **Excel/CSV** file and push data.")
 
-    #from streamlit.components.v1 import html
-    #html('''
-       #<script>
-        #window.top.document.querySelectorAll(`[href*="streamlit.io"]`).forEach(e => e.setAttribute("style", "display: none;"));
-      #</script>
-    #''')
+    from streamlit.components.v1 import html
+    html('''
+       <script>
+       const streamlitDoc = window.parent.document;
+
+        // Make the replacement
+        document.addEventListener("DOMContentLoaded", function(event){
+                streamlitDoc.getElementsByTagName("footer")[0].innerHTML = "Provided by <a href='https://yourwebsite.com' target='_blank' class='css-z3au9t egzxvld2'>Your Link Display Text Here</a>";
+            });
+      </script>
+    ''')
+
+    
 
     st.markdown("""
         <style>
