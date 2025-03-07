@@ -9,7 +9,7 @@ import os
 
 st.set_page_config(
     page_title="ESI miEdge-Salesforce Integration",  # This sets the title in the browser tab
-    page_icon="https://www.eesipeo.com/media/1-eESI_Logo_RevOut-1-4.png"  # This sets the favicon (can be an emoji or image URL)
+    page_icon="https://www.eesipeo.com/media/logoicon-copy-2-1.svg"  # This sets the favicon (can be an emoji or image URL)
 )
 
 
