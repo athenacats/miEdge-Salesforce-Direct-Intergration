@@ -25,7 +25,7 @@ st.set_option('client.showErrorDetails', False)
 CLIENT_ID = st.secrets["salesforce"]["client_id"]
 CLIENT_SECRET = st.secrets["salesforce"]["client_secret"]
 
-REDIRECT_URI = 'https://esi-miedge-salesforce-direct-intergration.streamlit.app/'
+REDIRECT_URI = 'https://esi-miedge-salesforce-direct-intergration.streamlit.app'
 # AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
 # TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
 AUTH_URL = 'https://test.salesforce.com/services/oauth2/authorize'
@@ -408,7 +408,7 @@ def main():
             fill:  #34dfa9 !important;
         }
         .st-emotion-cache-b0y9n5.e1d5ycv52:hover {
-            color: #34dfa9 !important;
+            color: white !important;
         }
         ::-webkit-scrollbar:focus {
         border: 1px solid #34dfa9 !important;        
