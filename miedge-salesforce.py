@@ -394,9 +394,22 @@ def main():
             height: 40px;
             width: 100%;
         }
+                
+        .stToolbarActions.st-emotion-cache-1p1m4ay.e1i26tt72 {
+            display: none;
+        }
         .st-emotion-cache-14553y9.egexzqm0 {
             color:  #34dfa9 !important;
-            }
+        }
+                
+        a._container_gzau3_1._viewerBadge_nim44_23 {
+            display: none;
+        }
+
+        ._profileContainer_gzau3_53 {
+            display: none;
+        }
+
         .st-emotion-cache-b0y9n5:hover {
             border: 1px solid #34dfa9 !important;
                 }
