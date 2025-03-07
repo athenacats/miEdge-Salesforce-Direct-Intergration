@@ -406,11 +406,17 @@ def main():
          visibility: hidden;
                 }
         footer {
-                visibility: hidden;
+                visibility: hidden !important;
         }
         header {
                 visibility: hidden;
         }
+                
+        [data-testid="stToolbar"] {
+                visibility: hidden !important;
+                }
+            
+                
                 
         a._container_gzau3_1._viewerBadge_nim44_23 {
             display: none !important;
