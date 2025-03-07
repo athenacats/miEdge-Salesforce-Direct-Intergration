@@ -1,0 +1,5 @@
+[browser]
+gatherUsageStats = false  # Removes 'Made with Streamlit' footer
+
+[footer]
+hideStreamlitFooter = true  # Hides both 'Made with Streamlit' and the profile link
