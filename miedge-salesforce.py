@@ -30,10 +30,10 @@ CLIENT_ID = st.secrets["salesforce"]["client_id"]
 CLIENT_SECRET = st.secrets["salesforce"]["client_secret"]
 
 REDIRECT_URI = 'https://esi-miedge-salesforce-direct-intergration.streamlit.app'
-# AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
-# TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
-AUTH_URL = 'https://test.salesforce.com/services/oauth2/authorize'
-TOKEN_URL = 'https://test.salesforce.com/services/oauth2/token'
+AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
+TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
+# AUTH_URL = 'https://test.salesforce.com/services/oauth2/authorize'
+# TOKEN_URL = 'https://test.salesforce.com/services/oauth2/token'
 
 # =======================
 # Helper Function to Initiate OAuth2 Flow (Meta Refresh Redirect)
