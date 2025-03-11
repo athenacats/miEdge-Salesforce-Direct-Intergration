@@ -327,6 +327,13 @@ def job_title_selector(df):
             max-height: 55vh;
             overflow-y: auto;
         }
+                
+        .stMultiSelect div[role='listbox'] span {
+            margin-bottom: 4px;  
+            padding: 6px 10px;   
+            display: block;       
+            border-radius: 4px;   
+        }
         </style>
     """, unsafe_allow_html=True)
 
