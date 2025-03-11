@@ -171,7 +171,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         Current_Provider__c = current_provider if current_provider in valid_providers else 'Other'
         NumberOfEmployees = row.get('Employees', '') or ''
         website = row.get('Website', '') or ''
-        industry = row.get('Industry', '') or ''
+        industry = (row.get('Industry', '') or '')[:255]
         Company_Phone__c = row.get('Phone Number', '') or ''
         LinkedIn__c = row.get('LinkedIn', '') or ''
         # Address = row.get('Address 1', '') or ''
