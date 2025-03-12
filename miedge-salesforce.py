@@ -214,7 +214,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
             'Email': email,
             'Phone': phone,
             'Title': job_title,
-            'LeadSource': 'MiEdge',
+            'LeadSource': 'miEdge',
             'OwnerId': owner_id,
             'Current_Provider__c': Current_Provider__c,
             'NumberOfEmployees': NumberOfEmployees,
