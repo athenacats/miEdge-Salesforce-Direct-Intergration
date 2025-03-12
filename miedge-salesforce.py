@@ -168,12 +168,13 @@ def push_to_salesforce(sf_instance, df, selected_object):
         job_title = row.get('Job Title', '') or ''
         valid_providers = st.session_state.get('valid_providers', set())
         current_provider = row.get('PEO (Normalized)', '').strip()
-        Current_Provider__c = current_provider if current_provider in valid_providers else 'Other'
+        Current_Provider__c = current_provider if current_provider in valid_providers else 'Other' #check on this
         NumberOfEmployees = row.get('Employees', '') or ''
         website = row.get('Website', '') or ''
-        industry = (row.get('Industry', '') or '')[:255]
+        industry = (row.get('Industry', '') or '')[:255] #picklist
         Company_Phone__c = row.get('Phone Number', '') or ''
         LinkedIn__c = row.get('LinkedIn', '') or ''
+        LeadSourceOther = row.get('PEO (Normalized)', '') or ''
         # Address = row.get('Address 1', '') or ''
         Facebook__c = row.get('Facebook', '') or ''
         Twitter__c = row.get('Twitter', '') or ''
@@ -230,6 +231,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
             'NAICS_Description__c': naics_Description__c,
             'Primary_NAICS__c': Company_NAICS_Code__c,
             'OSHA__c': osha,
+            'Lead_Source_Other__c': LeadSourceOther,
             'WHD__c': whd,
             'Fidelity_Bond__c': Fidelity_Bond__c,
             'Revenue_Range__c': Revenue_Range__c,
