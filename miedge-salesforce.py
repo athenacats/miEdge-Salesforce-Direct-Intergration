@@ -91,7 +91,7 @@ def is_executive_title(title):
         r'\bManaging Director\b', r'\bDirector\b', r'\bSenior Director\b', r'\bExecutive Director\b',
         r'\bSenior\b', r'\bSr\.\b', r'\bPrincipal\b', r'\bLead\b', r'\bHead\b', r'\bChief\b',
         r'\bPresident\b', r'\bPartner\b', r'\bOwner\b', r'\bFounder\b', r'\bChairman\b', r'\bExecutive\b', r'\bLeader\b',
-        r'\bManager\b', r'\bExecutive\b', r'\bMD\b', r'\bPartner\b'
+        r'\bExecutive\b', r'\bMD\b', r'\bPartner\b'
     ]
 
     exclusion_patterns = [
