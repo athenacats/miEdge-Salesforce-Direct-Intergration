@@ -168,7 +168,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         job_title = row.get('Job Title', '') or ''
         valid_providers = st.session_state.get('valid_providers', set())
         current_provider = row.get('PEO (Normalized)', '').strip()
-        Current_Provider__c = current_provider if current_provider in valid_providers else 'Other' #check on this
+        Current_Provider__c = current_provider if current_provider in valid_providers else 'Unknown' #check on this
         NumberOfEmployees = row.get('Employees', '') or ''
         website = row.get('Website', '') or ''
         industry = (row.get('Industry', '') or '')[:255] #picklist
