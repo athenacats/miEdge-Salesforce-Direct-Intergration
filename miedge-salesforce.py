@@ -390,7 +390,7 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    st.write("Authenticate with **Salesforce** first, then upload your **Excel/CSV** file and push data.")
+    st.write("Authenticate with **Salesforce** first, then upload your **CSV** file and push data.")
 
     
 
@@ -545,7 +545,7 @@ def main():
         st.success("✅ Connected to Salesforce!")
 
         # File uploader
-        uploaded_file = st.file_uploader("📤 Upload Excel/CSV File", type=["csv", "xlsx"])
+        uploaded_file = st.file_uploader("📤 Upload CSV File", type=["csv", "xlsx"])
 
         if uploaded_file is not None:
             try:
