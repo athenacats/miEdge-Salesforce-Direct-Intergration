@@ -545,7 +545,7 @@ def main():
         st.success("✅ Connected to Salesforce!")
 
         # File uploader
-        uploaded_file = st.file_uploader("📤 Upload CSV File", type=["csv", "xlsx"])
+        uploaded_file = st.file_uploader("📤 Upload CSV File", type=["csv"])
 
         if uploaded_file is not None:
             try:
