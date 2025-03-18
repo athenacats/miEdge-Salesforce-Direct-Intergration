@@ -95,7 +95,7 @@ def is_executive_title(title):
     ]
 
     exclusion_patterns = [
-        r'\bHR\b', r'\bHuman Resources\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b'
+        r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b'
     ]
 
     if any(re.search(pattern, str(title), re.IGNORECASE) for pattern in patterns):
