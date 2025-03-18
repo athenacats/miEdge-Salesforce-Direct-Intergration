@@ -149,7 +149,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
     failed_counter = st.empty()
     failed_messages = []
 
-    status_text.text("🚀 Starting upload to Salesforce...")
+    status_text.text("🚀 Starting upload to Salesforce... PLEASE KEEP THIS WINDOW OPEN DURING THE OPERATION! If the session disconnects at any point, just click on the '🚀 Push Filtered Data to Salesforce' button again")
 
     for idx, (_, row) in enumerate(df_cleaned.iterrows()):
         # Extract and map fields from DataFrame
@@ -179,7 +179,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         Facebook__c = row.get('Facebook', '') or ''
         Twitter__c = row.get('Twitter', '') or ''
         # msid__c = row.get('MSID', '') or ''
-        naics_Description__c = row.get('NAICS Description', '') or ''
+        naics_Description__c = row.get('NAICS Description', '')[:150] or ''
         Company_NAICS_Code__c = row.get('NAICS Code', '') or ''
         osha = row.get('OSHA', '') or ''
         whd = row.get('WHD', '') or ''
