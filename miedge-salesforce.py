@@ -95,7 +95,10 @@ def is_executive_title(title):
     ]
 
     exclusion_patterns = [
-        r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b'
+        r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b', r'\bengineering\b', r'\bclinical\b',
+        r'\blending\b', r'\bresearch\b', r'\bclient\b', r'\bengine\b', r'\blearning\b', r'\bgovernment\b', r'\bloan\b',
+        r'\bmember\b', r'\btechnical\b', r'\bproperty\b', r'\bpolicy\b', r'\brevenue\b', r'\bgeology\b', r'\banalyst\b',
+        r'\baccountant\b', r'\bhealthcare\b', r'\bhealth\b', r'\bsecurity\b', r'\bcloud\b', r'\bclinic\b', r'\blegal\b', r'\bdrug\b', r'\bdiversity\b'
     ]
 
     if any(re.search(pattern, str(title), re.IGNORECASE) for pattern in patterns):
