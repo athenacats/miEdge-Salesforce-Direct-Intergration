@@ -100,7 +100,10 @@ def is_executive_title(title):
         r'\bmember\b', r'\btechnical\b', r'\bproperty\b', r'\bpolicy\b', r'\brevenue\b', r'\bgeology\b', r'\banalyst\b',
         r'\baccountant\b', r'\bhealthcare\b', r'\bhealth\b', r'\bsecurity\b', r'\bcloud\b', r'\bclinic\b', r'\blegal\b', r'\bdrug\b', r'\bdiversity\b',
         r'\bleasing\b', r'\bpastry\b', r'\butilities\b', r'\btreasurer\b', r'\bcontract\b', r'\blisting\b', r'\bgrants\b',
-        r'\bleadership\b'
+        r'\bleadership\b', r'\bsports\b', r'\bquality\b', r'\btoxicology\b', r'\bpulmonary\b', r'\bmanufacturer\b',
+        r'\bindustry\b', r'\bchemistry\b', r'\bbiology\b', r'\blaboratory\b', r'\bspace\b', r'\bexecutive administrator\b',
+        r'\bpulmonary\b', r'\bvirtual\b', r'\bquality\b', r'\bphaermaceuticl\b', r'\bscience\b', r'\bsciences\b', r'\bprofessional\b',
+        r'\bparalegal\b', r'\bmembership\b', r'\bdonor\b', r'\bcurriculum\b', r'\bbioanalytics\b'
     ]
 
     if any(re.search(pattern, str(title), re.IGNORECASE) for pattern in patterns):
