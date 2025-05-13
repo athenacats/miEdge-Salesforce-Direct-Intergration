@@ -86,7 +86,7 @@ def get_salesforce_token(auth_code):
 # =======================
 def is_executive_title(title):
     patterns = [
-        r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bPresident\b',  r'\bCAO\b', r'\bOwner\b']
+        r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bPresident\b',  r'\bCAO\b', r'\bOwner\b', r'\bCMO\b', r'\bCHRO\b', r'\bCLO\b', r'\bCPO\b', r'\bCRO\b', r'\bFounder\b', r'\bChairman\b', r'\bMD\b']
 
     exclusion_patterns = [
         r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b', r'\bengineering\b', r'\bclinical\b',
