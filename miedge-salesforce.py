@@ -158,7 +158,6 @@ def push_to_salesforce(sf_instance, df, selected_object):
         # Extract and map fields from DataFrame
         if assign_owner:
             owner_id = sales_users[st.session_state.round_robin_index]
-            st.write(f"📤 Assigning lead {idx + 1} to user ID: {owner_id}")
             st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
         else:
             owner_id = None
