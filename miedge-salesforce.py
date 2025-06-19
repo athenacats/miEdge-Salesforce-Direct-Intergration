@@ -134,6 +134,8 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
     sales_users = st.session_state.sales_users
     total_users = len(sales_users)
+    st.write("📋 Active Sales Users:")
+    st.json(sales_users)
 
     assign_owner = total_users > 0
     
@@ -261,7 +263,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
         try:
             # Push data to Salesforce
-            sf_instance.__getattr__(selected_object).create(data)
+            #sf_instance.__getattr__(selected_object).create(data)
             success_count += 1
 
         except Exception as e:
@@ -378,7 +380,7 @@ def get_active_sales_users(sf_instance):
     users = results['records']
     user_ids = [user['Id'] for user in users]
 
-    return user_ids
+    return users
 
 
 # =======================
