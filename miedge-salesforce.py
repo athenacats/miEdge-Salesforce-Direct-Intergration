@@ -134,8 +134,6 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
     sales_users = st.session_state.sales_users
     total_users = len(sales_users)
-    st.write("📋 Active Sales Users:")
-    st.json(sales_users)
 
     assign_owner = total_users > 0
     
@@ -263,7 +261,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
         try:
             # Push data to Salesforce
-            #sf_instance.__getattr__(selected_object).create(data)
+            sf_instance.__getattr__(selected_object).create(data)
             success_count += 1
 
         except Exception as e:
@@ -378,9 +376,10 @@ def get_active_sales_users(sf_instance):
     results = sf_instance.query_all(query)
 
     users = results['records']
-    user_ids = [user['Id'] for user in users]
+    excluded_names = {"Terry Hookstra"}
+    filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
 
-    return users
+    return filtered_users
 
 
 # =======================
@@ -591,8 +590,21 @@ def main():
 
                     # Push to Salesforce
                     selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead'])
+                    # Allow user to limit number of leads to send
+                    max_leads = len(filtered_df)
+                    num_to_push = st.number_input(
+                        "🎯 How many leads would you like to push?",
+                        min_value=1,
+                        max_value=max_leads,
+                        value=max_leads,
+                        step=1,
+                        key="num_to_push"
+                    )
+
+                    df_to_push = filtered_df.head(num_to_push)
+
                     if st.button("🚀 Push Filtered Data to Salesforce"):
-                        push_to_salesforce(st.session_state.salesforce, filtered_df, selected_object)
+                        push_to_salesforce(st.session_state.salesforce, df_to_push, selected_object)
                 else:
                     st.error("❌ The uploaded file does not contain a 'Job Title' column.")
             except Exception as e:
