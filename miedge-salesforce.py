@@ -133,6 +133,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         st.session_state.round_robin_index = 0  # Start from the first user
 
     sales_users = st.session_state.sales_users
+    st.write("🧑‍💼 Sales Users in Round Robin:", sales_users)
     total_users = len(sales_users)
 
     assign_owner = total_users > 0
@@ -157,6 +158,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         # Extract and map fields from DataFrame
         if assign_owner:
             owner_id = sales_users[st.session_state.round_robin_index]
+            st.write(f"📤 Assigning lead {idx + 1} to user ID: {owner_id}")
             st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
         else:
             owner_id = None
@@ -261,7 +263,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
         try:
             # Push data to Salesforce
-            sf_instance.__getattr__(selected_object).create(data)
+            #sf_instance.__getattr__(selected_object).create(data)
             success_count += 1
 
         except Exception as e:
@@ -378,6 +380,7 @@ def get_active_sales_users(sf_instance):
     users = results['records']
     excluded_names = {"Terry Hookstra"}
     filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
+    st.write("🔍 All Active Sales Users:", [{"Name": u['Name'], "Id": u['Id']} for u in filtered_users])
 
     return filtered_users
 
