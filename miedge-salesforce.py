@@ -378,9 +378,10 @@ def get_active_sales_users(sf_instance):
     results = sf_instance.query_all(query)
 
     users = results['records']
-    user_ids = [user['Id'] for user in users]
+    excluded_names = {"Terry Hookstra"}
+    filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
 
-    return user_ids
+    return filtered_users
 
 
 # =======================
