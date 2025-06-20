@@ -128,12 +128,17 @@ def clean_date(date_str):
 
 def push_to_salesforce(sf_instance, df, selected_object):
 
-    if 'sales_users' not in st.session_state:
-        st.session_state.sales_users = get_active_sales_users(sf_instance)
-        st.session_state.round_robin_index = 0  # Start from the first user
+    
+    st.session_state.sales_users = [
+        "0051U000005wlorQAA",  # Steven Hookstra
+        "0051U00000AZSVcQAP",  # Terry Nagelkirk
+        "005Ql000001QcfNIAS",  # Pat Bonner
+        "005Ql000003g6NRIAY"   # Susanne Parker
+    ]
+    st.session_state.round_robin_index = 0  # Start from the first user
+    st.write("📋 Final Round Robin Users:", st.session_state.sales_users)
 
     sales_users = st.session_state.sales_users
-    st.write("🧑‍💼 Sales Users in Round Robin:", sales_users)
     total_users = len(sales_users)
 
     assign_owner = total_users > 0
@@ -379,7 +384,6 @@ def get_active_sales_users(sf_instance):
     users = results['records']
     excluded_names = {"Terry Hookstra"}
     filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
-    st.write("🔍 All Active Sales Users:", [{"Name": u['Name'], "Id": u['Id']} for u in filtered_users])
 
     return filtered_users
 
