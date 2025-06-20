@@ -129,14 +129,10 @@ def clean_date(date_str):
 def push_to_salesforce(sf_instance, df, selected_object):
 
     
-    st.session_state.sales_users = [
-        "0051U000005wlorQAA",  # Steven Hookstra
-        "0051U00000AZSVcQAP",  # Terry Nagelkirk
-        "005Ql000001QcfNIAS",  # Pat Bonner
-        "005Ql000003g6NRIAY"   # Susanne Parker
-    ]
+    st.session_state.sales_users = get_active_sales_users(sf_instance)
     st.session_state.round_robin_index = 0  # Start from the first user
     st.write("📋 Final Round Robin Users:", st.session_state.sales_users)
+
 
     sales_users = st.session_state.sales_users
     total_users = len(sales_users)
@@ -382,10 +378,9 @@ def get_active_sales_users(sf_instance):
     results = sf_instance.query_all(query)
 
     users = results['records']
-    excluded_names = {"Terry Hookstra"}
-    filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
+    user_ids = [user['Id'] for user in users]
 
-    return filtered_users
+    return user_ids
 
 
 # =======================
@@ -596,21 +591,8 @@ def main():
 
                     # Push to Salesforce
                     selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead'])
-                    # Allow user to limit number of leads to send
-                    max_leads = len(filtered_df)
-                    num_to_push = st.number_input(
-                        "🎯 How many leads would you like to push?",
-                        min_value=1,
-                        max_value=max_leads,
-                        value=max_leads,
-                        step=1,
-                        key="num_to_push"
-                    )
-
-                    df_to_push = filtered_df.head(num_to_push)
-
                     if st.button("🚀 Push Filtered Data to Salesforce"):
-                        push_to_salesforce(st.session_state.salesforce, df_to_push, selected_object)
+                        push_to_salesforce(st.session_state.salesforce, filtered_df, selected_object)
                 else:
                     st.error("❌ The uploaded file does not contain a 'Job Title' column.")
             except Exception as e:
@@ -618,4 +600,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main() 
