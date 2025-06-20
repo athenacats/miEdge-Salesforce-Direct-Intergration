@@ -592,8 +592,20 @@ def main():
 
                     # Push to Salesforce
                     selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead'])
+                    # Allow user to limit number of leads to send
+                    max_leads = len(filtered_df)
+                    num_to_push = st.number_input(
+                        "🎯 How many leads would you like to push?",
+                        min_value=1,
+                        max_value=max_leads,
+                        value=max_leads,
+                        step=1,
+                        key="num_to_push"
+                    )
+
+                    df_to_push = filtered_df.head(num_to_push)
                     if st.button("🚀 Push Filtered Data to Salesforce"):
-                        push_to_salesforce(st.session_state.salesforce, filtered_df, selected_object)
+                        push_to_salesforce(st.session_state.salesforce, df_to_push, selected_object)
                 else:
                     st.error("❌ The uploaded file does not contain a 'Job Title' column.")
             except Exception as e:
