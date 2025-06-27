@@ -162,7 +162,11 @@ def push_to_salesforce(sf_instance, df, selected_object):
             owner_id = sales_users[st.session_state.round_robin_index]
             st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
             st.write("📋 Owner id", owner_id)
+            if owner_id == "0051U00000AVuYnQAL":
+                st.warning("⚠️ Skipping Barry (0051U00000AVuYnQAL) as lead owner.")
+                continue
         else:
+            owner_id = "0051U00000AZSVcQAP"
             st.warning("⚠️ No valid Salesforce users for round robin assignment. Default owner will be used (likely whoever connected OAuth).")
         st.write("📋 Owner id2", owner_id)
         Salutation = row.get('Contact Prefix (e.g. Dr, Prof etc.)', '') or ''
