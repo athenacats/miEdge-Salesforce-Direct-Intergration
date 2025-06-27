@@ -112,9 +112,6 @@ def is_executive_title(title):
 import streamlit as st
 import time  # For simulating delays in progress
 
-if 'rr_id_counter' not in st.session_state:
-        st.session_state.rr_id_counter = 0
-
 def clean_date(date_str):
     if pd.isna(date_str) or date_str.strip() == '':
         return None  # Salesforce accepts null dates
@@ -130,14 +127,18 @@ def clean_date(date_str):
 
 
 def push_to_salesforce(sf_instance, df, selected_object):
+
     
-    
-    round_robin_map = {
-        0: "0051U000005wlorQAA",   # Steven Hookstra
-        1: "005Ql000001QcfNIAS",   # Pat Bonner
-        3: "005Ql000003g6NRIAY",  # Susanne Parker
-        4: "0051U00000AZSVcQAP",  # Terry Nagelkirk
-    }
+    st.session_state.sales_users = get_active_sales_users(sf_instance)
+    st.session_state.round_robin_index = 0  # Start from the first user
+    st.write("📋 Final Round Robin Users:", st.session_state.sales_users)
+
+
+    sales_users = st.session_state.sales_users
+    total_users = len(sales_users)
+    st.write("📋 Total Users:", total_users)
+
+    assign_owner = total_users > 0
     
     df_cleaned = df.fillna('')
 
@@ -157,17 +158,17 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
     for idx, (_, row) in enumerate(df_cleaned.iterrows()):
         # Extract and map fields from DataFrame
-        
-        while True:
-            mod_val = st.session_state.rr_id_counter % 5
-            owner_id = round_robin_map.get(mod_val)
-            if owner_id:
-                break
-            else:
-                st.session_state.rr_id_counter += 1  # skip unassigned mod values (e.g., mod 2)
-
-        st.write(f"📋 Round_Robin_ID__c: {st.session_state.rr_id_counter} → Mod: {mod_val} → OwnerId: {owner_id}")
-
+        if assign_owner:
+            owner_id = sales_users[st.session_state.round_robin_index]
+            st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
+            st.write("📋 Owner id", owner_id)
+            if owner_id == "0051U00000AVuYnQAL":
+                st.warning("⚠️ Skipping Barry (0051U00000AVuYnQAL) as lead owner.")
+                continue
+        else:
+            owner_id = "0051U00000AZSVcQAP"
+            st.warning("⚠️ No valid Salesforce users for round robin assignment. Default owner will be used (likely whoever connected OAuth).")
+        st.write("📋 Owner id2", owner_id)
         Salutation = row.get('Contact Prefix (e.g. Dr, Prof etc.)', '') or ''
         first_name = row.get('Contact First Name', '') or ''
         MiddleName = row.get('Contact Middle Name (or initial)', '') or ''
@@ -264,15 +265,13 @@ def push_to_salesforce(sf_instance, df, selected_object):
             'DOT__c': dot,
             'Ex_Mod__c': Ex_Mod__c,
             'Ex_Mod_changed_in_last_30_days__c': Ex_Mod_changed_in_last_30_days__c,
-            'Round_Robin_ID__c': st.session_state.rr_id_counter,
 
         }   
 
         try:
             st.write(f"➡️ Assigning lead to user: {owner_id}")
             # Push data to Salesforce
-            sf_instance.__getattr__(selected_object).create(data)
-            st.session_state.rr_id_counter += 1 
+            #sf_instance.__getattr__(selected_object).create(data, headers={"Sforce-Auto-Assign": "FALSE"})
             success_count += 1
 
         except Exception as e:
@@ -387,7 +386,7 @@ def get_active_sales_users(sf_instance):
     results = sf_instance.query_all(query)
 
     users = results['records']
-    excluded_names = {"Terry Hookstra", "Terry Nagelkirk"}
+    excluded_names = {"Terry Hookstra"}
     filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
 
     return filtered_users
