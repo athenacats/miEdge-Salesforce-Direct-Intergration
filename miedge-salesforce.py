@@ -112,6 +112,9 @@ def is_executive_title(title):
 import streamlit as st
 import time  # For simulating delays in progress
 
+if 'rr_id_counter' not in st.session_state:
+        st.session_state.rr_id_counter = 0
+
 def clean_date(date_str):
     if pd.isna(date_str) or date_str.strip() == '':
         return None  # Salesforce accepts null dates
@@ -127,8 +130,7 @@ def clean_date(date_str):
 
 
 def push_to_salesforce(sf_instance, df, selected_object):
-    if 'rr_id_counter' not in st.session_state:
-        st.session_state.rr_id_counter = 0
+    
     
     round_robin_map = {
         0: "0051U000005wlorQAA",   # Steven Hookstra
