@@ -127,7 +127,8 @@ def clean_date(date_str):
 
 
 def push_to_salesforce(sf_instance, df, selected_object):
-    st.session_state.rr_id_counter = 0
+    if 'rr_id_counter' not in st.session_state:
+        st.session_state.rr_id_counter = 0
     
     round_robin_map = {
         0: "0051U000005wlorQAA",   # Steven Hookstra
