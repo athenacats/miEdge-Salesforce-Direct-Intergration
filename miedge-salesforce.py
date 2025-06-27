@@ -136,6 +136,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
     sales_users = st.session_state.sales_users
     total_users = len(sales_users)
+    st.write("📋 Total Users:", total_users)
 
     assign_owner = total_users > 0
     
@@ -160,8 +161,10 @@ def push_to_salesforce(sf_instance, df, selected_object):
         if assign_owner:
             owner_id = sales_users[st.session_state.round_robin_index]
             st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
+            st.write("📋 Owner id", owner_id)
         else:
-            owner_id = None
+            st.warning("⚠️ No valid Salesforce users for round robin assignment. Default owner will be used (likely whoever connected OAuth).")
+        st.write("📋 Owner id2", owner_id)
         Salutation = row.get('Contact Prefix (e.g. Dr, Prof etc.)', '') or ''
         first_name = row.get('Contact First Name', '') or ''
         MiddleName = row.get('Contact Middle Name (or initial)', '') or ''
@@ -262,6 +265,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         }   
 
         try:
+            st.write(f"➡️ Assigning lead to user: {owner_id}")
             # Push data to Salesforce
             #sf_instance.__getattr__(selected_object).create(data)
             success_count += 1
