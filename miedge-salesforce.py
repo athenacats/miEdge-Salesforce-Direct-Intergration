@@ -271,7 +271,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         try:
             st.write(f"➡️ Assigning lead to user: {owner_id}")
             # Push data to Salesforce
-            #sf_instance.__getattr__(selected_object).create(data)
+            sf_instance.__getattr__(selected_object).create(data)
             st.session_state.rr_id_counter += 1 
             success_count += 1
 
