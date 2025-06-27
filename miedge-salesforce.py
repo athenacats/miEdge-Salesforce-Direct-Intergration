@@ -263,7 +263,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
         try:
             # Push data to Salesforce
-            sf_instance.__getattr__(selected_object).create(data)
+            #sf_instance.__getattr__(selected_object).create(data)
             success_count += 1
 
         except Exception as e:
