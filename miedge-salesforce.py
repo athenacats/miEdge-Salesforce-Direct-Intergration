@@ -271,7 +271,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         try:
             st.write(f"➡️ Assigning lead to user: {owner_id}")
             # Push data to Salesforce
-            sf_instance.__getattr__(selected_object).create(data)
+            #sf_instance.__getattr__(selected_object).create(data)
             success_count += 1
 
         except Exception as e:
@@ -386,7 +386,7 @@ def get_active_sales_users(sf_instance):
     results = sf_instance.query_all(query)
 
     users = results['records']
-    excluded_names = {"Terry Hookstra"}
+    excluded_names = {"Terry Hookstra", "Terry Nagelkirk"}
     filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
 
     return filtered_users
