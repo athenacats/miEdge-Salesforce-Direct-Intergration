@@ -166,7 +166,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
             else:
                 st.session_state.rr_id_counter += 1  # skip unassigned mod values (e.g., mod 2)
 
-        st.write(f"📋 Round_Robin_ID__c: {mod_val} → Mod: {mod_val} → OwnerId: {owner_id}")
+        st.write(f"📋 Round_Robin_ID__c: {st.session_state.rr_id_counter} → Mod: {mod_val} → OwnerId: {owner_id}")
 
         Salutation = row.get('Contact Prefix (e.g. Dr, Prof etc.)', '') or ''
         first_name = row.get('Contact First Name', '') or ''
@@ -264,7 +264,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
             'DOT__c': dot,
             'Ex_Mod__c': Ex_Mod__c,
             'Ex_Mod_changed_in_last_30_days__c': Ex_Mod_changed_in_last_30_days__c,
-            'Round_Robin_ID__c': mod_val,
+            'Round_Robin_ID__c': st.session_state.rr_id_counter,
 
         }   
 
