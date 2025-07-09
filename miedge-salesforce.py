@@ -288,7 +288,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
                 'Phone': phone,
                 "Email": email,
                 "Number of Employees": NumberOfEmployees,
-                "Current Provider": Current_Provider__c               
+                "Current Provider": current_provider             
             })
 
         except Exception as e:
