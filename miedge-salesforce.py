@@ -172,19 +172,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         else:
             owner_id = "0051U00000AZSVcQAP"
             st.warning("⚠️ No valid Salesforce users for round robin assignment. Default owner will be used (likely whoever connected OAuth).")
-        st.write("📋 Owner id2", owner_id)
-        
-        # Append assignment log regardless of success
-        assignment_log.append({
-            "Index": idx,
-            "Assigned To": user_name,
-            "Company": company,
-            "Email": email,
-            "Full Name": f"{first_name} {MiddleName} {last_name}".strip(),
-            "Job Title": job_title,
-        })
-
-        
+        st.write("📋 Owner id2", owner_id)       
         
         Salutation = row.get('Contact Prefix (e.g. Dr, Prof etc.)', '') or ''
         first_name = row.get('Contact First Name', '') or ''
@@ -290,6 +278,16 @@ def push_to_salesforce(sf_instance, df, selected_object):
             # Push data to Salesforce
             #sf_instance.__getattr__(selected_object).create(data, headers={"Sforce-Auto-Assign": "FALSE"})
             success_count += 1
+
+            # Append assignment log if success
+            assignment_log.append({
+                "Index": idx,
+                "Assigned To": user_name,
+                "Company": company,
+                "Email": email,
+                "Full Name": f"{first_name} {MiddleName} {last_name}".strip(),
+                "Job Title": job_title,
+            })
 
         except Exception as e:
             error_message = str(e)
