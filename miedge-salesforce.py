@@ -134,7 +134,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
     st.write("📋 Final Round Robin Users:", st.session_state.sales_users)
 
 
-    sales_users = st.session_state.sales_users
+    sales_users = list(st.session_state.sales_users.keys())
     total_users = len(sales_users)
     st.write("📋 Total Users:", total_users)
 
@@ -153,6 +153,9 @@ def push_to_salesforce(sf_instance, df, selected_object):
     duplicate_counter = st.empty()
     failed_counter = st.empty()
     failed_messages = []
+    # Add list to track assignments
+    assignment_log = []
+
 
     status_text.text("🚀 Starting upload to Salesforce... PLEASE KEEP THIS WINDOW OPEN DURING THE OPERATION! If the session disconnects at any point, just click on the '🚀 Push Filtered Data to Salesforce' button again")
 
@@ -160,6 +163,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         # Extract and map fields from DataFrame
         if assign_owner:
             owner_id = sales_users[st.session_state.round_robin_index]
+            user_name = st.session_state.sales_users.get(owner_id, owner_id)
             st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
             st.write("📋 Owner id", owner_id)
             if owner_id == "0051U00000AVuYnQAL":
@@ -169,6 +173,19 @@ def push_to_salesforce(sf_instance, df, selected_object):
             owner_id = "0051U00000AZSVcQAP"
             st.warning("⚠️ No valid Salesforce users for round robin assignment. Default owner will be used (likely whoever connected OAuth).")
         st.write("📋 Owner id2", owner_id)
+        
+        # Append assignment log regardless of success
+        assignment_log.append({
+            "Index": idx,
+            "Assigned To": user_name,
+            "Company": company,
+            "Email": email,
+            "Full Name": f"{first_name} {MiddleName} {last_name}".strip(),
+            "Job Title": job_title,
+        })
+
+        
+        
         Salutation = row.get('Contact Prefix (e.g. Dr, Prof etc.)', '') or ''
         first_name = row.get('Contact First Name', '') or ''
         MiddleName = row.get('Contact Middle Name (or initial)', '') or ''
@@ -271,7 +288,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
         try:
             st.write(f"➡️ Assigning lead to user: {owner_id}")
             # Push data to Salesforce
-            sf_instance.__getattr__(selected_object).create(data, headers={"Sforce-Auto-Assign": "FALSE"})
+            #sf_instance.__getattr__(selected_object).create(data, headers={"Sforce-Auto-Assign": "FALSE"})
             success_count += 1
 
         except Exception as e:
@@ -294,7 +311,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
         # Simulate delay for demonstration purposes (remove in production)
         time.sleep(0.1)
-
+    
     # Final status
     status_text.text("✅ Upload Complete!")
 
@@ -306,6 +323,21 @@ def push_to_salesforce(sf_instance, df, selected_object):
         st.error(f"❌ {failed_count} records failed due to other errors.")
         with st.expander("🛠 See Details for Failed Records"):
             st.text("\n".join(failed_messages))
+    # Generate download link for assignment log
+    assignment_df = pd.DataFrame(assignment_log)
+
+    # Optional: merge with original filtered data for a full export
+    merged_export = df.iloc[[entry['Index'] for entry in assignment_log]].copy()
+    merged_export.insert(1, 'Assigned To', [entry['Assigned To'] for entry in assignment_log])  # insert into column B
+
+    st.markdown("### 📦 Download Full Assignment Log")
+    st.download_button(
+        label="📥 Download Assigned Leads as CSV",
+        data=merged_export.to_csv(index=False).encode('utf-8'),
+        file_name='assigned_leads_master.csv',
+        mime='text/csv'
+    )
+
 
 def job_title_selector(df):
     st.write("### 🛠 Select Job Titles to Keep")
@@ -385,11 +417,9 @@ def get_active_sales_users(sf_instance):
     """
     results = sf_instance.query_all(query)
 
-    users = results['records']
     excluded_names = {"Terry Hookstra"}
-    filtered_users = [user['Id'] for user in users if user['Name'] not in excluded_names]
-
-    return filtered_users
+    user_dict = {user['Id']: user['Name'] for user in results['records'] if user['Name'] not in excluded_names}
+    return user_dict
 
 
 # =======================
