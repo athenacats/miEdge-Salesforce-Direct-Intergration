@@ -325,13 +325,13 @@ def push_to_salesforce(sf_instance, df, selected_object):
     assignment_df = pd.DataFrame(assignment_log)
 
     # Optional: merge with original filtered data for a full export
-    merged_export = df.iloc[[entry['Index'] for entry in assignment_log]].copy()
-    merged_export.insert(1, 'Assigned To', [entry['Assigned To'] for entry in assignment_log])  # insert into column B
+    #merged_export = df.iloc[[entry['Index'] for entry in assignment_log]].copy()
+    #merged_export.insert(1, 'Assigned To', [entry['Assigned To'] for entry in assignment_log])  # insert into column B
 
     st.markdown("### 📦 Download Full Assignment Log")
     st.download_button(
         label="📥 Download Assigned Leads as CSV",
-        data=merged_export.to_csv(index=False).encode('utf-8'),
+        data=assignment_df.to_csv(index=False).encode('utf-8'),
         file_name='assigned_leads_master.csv',
         mime='text/csv'
     )
