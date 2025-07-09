@@ -281,12 +281,14 @@ def push_to_salesforce(sf_instance, df, selected_object):
 
             # Append assignment log if success
             assignment_log.append({
-                "Index": idx,
-                "Assigned To": user_name,
-                "Company": company,
-                "Email": email,
                 "Full Name": f"{first_name} {MiddleName} {last_name}".strip(),
                 "Job Title": job_title,
+                "Company": company,
+                "Assigned To": user_name,
+                'Phone': phone,
+                "Email": email,
+                "Number of Employees": NumberOfEmployees,
+                "Current Provider": Current_Provider__c               
             })
 
         except Exception as e:
