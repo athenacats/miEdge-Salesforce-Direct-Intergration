@@ -1,4 +1,6 @@
 [browser]
 gatherUsageStats = false  # Removes 'Made with Streamlit' footer
 
+[server]
+runOnSave = false
 
