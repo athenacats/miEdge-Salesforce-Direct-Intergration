@@ -1,3 +1,5 @@
+import os
+os.environ["STREAMLIT_WATCHDOG"] = "none"
 import streamlit as st
 import pandas as pd
 import re
