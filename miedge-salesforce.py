@@ -621,9 +621,9 @@ def main():
                         lambda x: priority_order.index(x) if x in priority_order else len(priority_order)
                     )
 
-                    filtered_df = filtered_df.sort_values(by=['Contact Company name', 'priority'])
+                    filtered_df = filtered_df.sort_values(by=['Name', 'priority'])
 
-                    filtered_df = filtered_df.drop_duplicates(subset=['Contact Company name'], keep='first')
+                    filtered_df = filtered_df.drop_duplicates(subset=['Name'], keep='first')
 
                     filtered_df = filtered_df.drop(columns=['priority'])
                     
