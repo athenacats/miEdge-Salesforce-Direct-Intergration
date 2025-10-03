@@ -420,7 +420,12 @@ def get_active_sales_users(sf_instance):
     results = sf_instance.query_all(query)
 
     excluded_names = {"Terry Hookstra"}
-    user_dict = {user['Id']: user['Name'] for user in results['records'] if user['Name'] not in excluded_names}
+    excluded_ids = {"005Ql00000CV3qkIAD"}
+    user_dict = {
+        user['Id']: user['Name']
+        for user in results['records']
+        if user['Id'] not in excluded_ids and user['Name'] not in excluded_names
+    }
     return user_dict
 
 
