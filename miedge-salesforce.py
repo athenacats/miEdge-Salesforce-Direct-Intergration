@@ -617,7 +617,20 @@ def main():
 
                     # Filter DataFrame based on selection
                     filtered_df = df[df['Job Title'].isin(selected_titles) & df['PEO (Normalized)'].isin(selected_peos)]
-                    
+                    priority_order = [
+                        'CEO', 'President', 'COO', 'CFO', 'CTO', 'CIO', 'CMO', 'Owner',
+                        'Founder', 'Chairman', 'MD', 'CAO', 'CRO', 'CHRO', 'CLO', 'CPO'
+                    ]
+
+                    filtered_df['priority'] = filtered_df['Job Title'].apply(
+                        lambda x: priority_order.index(x) if x in priority_order else len(priority_order)
+                    )
+
+                    filtered_df = filtered_df.sort_values(by=['Name', 'priority'])
+
+                    filtered_df = filtered_df.drop_duplicates(subset=['Name'], keep='first')
+
+                    filtered_df = filtered_df.drop(columns=['priority'])
                     
                     st.session_state.filtered_df = filtered_df
 
