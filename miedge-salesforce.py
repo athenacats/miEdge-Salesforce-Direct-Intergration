@@ -88,15 +88,18 @@ def get_salesforce_token(auth_code):
 # =======================
 def is_executive_title(title):
     patterns = [
-         r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bCMO\b', r'\bCHRO\b', r'\bCLO\b', r'\bCPO\b', r'\bCRO\b',
-        r'\bVice President\b', r'\bVP\b', r'\bV\.P\.\b',
-        r'\bManaging Director\b', r'\bDirector\b', r'\bSenior Director\b', r'\bExecutive Director\b',
-        r'\bSenior\b', r'\bSr\.\b', r'\bPrincipal\b', r'\bLead\b', r'\bHead\b', r'\bChief\b',
-        r'\bPresident\b', r'\bPartner\b', r'\bOwner\b', r'\bFounder\b', r'\bChairman\b', r'\bExecutive\b', r'\bLeader\b',
-        r'\bManager\b', r'\bExecutive\b', r'\bMD\b']
+        r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bPresident\b',  r'\bCAO\b', r'\bOwner\b', r'\bCMO\b', r'\bCHRO\b', r'\bCLO\b', r'\bCPO\b', r'\bCRO\b', r'\bFounder\b', r'\bChairman\b', r'\bMD\b']
 
     exclusion_patterns = [
-        r'\bHR\b', r'\bHuman Resources\b'
+        r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b', r'\bengineering\b', r'\bclinical\b',
+        r'\blending\b', r'\bresearch\b', r'\bclient\b', r'\bengine\b', r'\blearning\b', r'\bgovernment\b', r'\bloan\b',
+        r'\bmember\b', r'\btechnical\b', r'\bproperty\b', r'\bpolicy\b', r'\brevenue\b', r'\bgeology\b', r'\banalyst\b',
+        r'\baccountant\b', r'\bhealthcare\b', r'\bhealth\b', r'\bsecurity\b', r'\bcloud\b', r'\bclinic\b', r'\blegal\b', r'\bdrug\b', r'\bdiversity\b',
+        r'\bleasing\b', r'\bpastry\b', r'\butilities\b', r'\btreasurer\b', r'\bcontract\b', r'\blisting\b', r'\bgrants\b',
+        r'\bleadership\b', r'\bsports\b', r'\bquality\b', r'\btoxicology\b', r'\bpulmonary\b', r'\bmanufacturer\b',
+        r'\bindustry\b', r'\bchemistry\b', r'\bbiology\b', r'\blaboratory\b', r'\bspace\b', r'\bexecutive administrator\b',
+        r'\bpulmonary\b', r'\bvirtual\b', r'\bquality\b', r'\bphaermaceuticl\b', r'\bscience\b', r'\bsciences\b', r'\bprofessional\b',
+        r'\bparalegal\b', r'\bmembership\b', r'\bdonor\b', r'\bcurriculum\b', r'\bbioanalytics\b'
     ]
 
     if any(re.search(pattern, str(title), re.IGNORECASE) for pattern in patterns):
@@ -614,6 +617,20 @@ def main():
 
                     # Filter DataFrame based on selection
                     filtered_df = df[df['Job Title'].isin(selected_titles) & df['PEO (Normalized)'].isin(selected_peos)]
+                    priority_order = [
+                        'CEO', 'President', 'COO', 'CFO', 'CTO', 'CIO', 'CMO', 'Owner',
+                        'Founder', 'Chairman', 'MD', 'CAO', 'CRO', 'CHRO', 'CLO', 'CPO'
+                    ]
+
+                    filtered_df['priority'] = filtered_df['Job Title'].apply(
+                        lambda x: priority_order.index(x) if x in priority_order else len(priority_order)
+                    )
+
+                    filtered_df = filtered_df.sort_values(by=['Name', 'priority'])
+
+                    filtered_df = filtered_df.drop_duplicates(subset=['Name'], keep='first')
+
+                    filtered_df = filtered_df.drop(columns=['priority'])
                     
                     st.session_state.filtered_df = filtered_df
 
