@@ -88,7 +88,97 @@ def get_salesforce_token(auth_code):
 # =======================
 def is_executive_title(title):
     patterns = [
-        r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bPresident\b',  r'\bCAO\b', r'\bOwner\b', r'\bCMO\b', r'\bCHRO\b', r'\bCLO\b', r'\bCPO\b', r'\bCRO\b', r'\bFounder\b', r'\bChairman\b', r'\bMD\b']
+    # Core C-Suite abbreviations
+    r'\bCEO\b',
+    r'\bCOO\b',
+    r'\bCFO\b',
+    r'\bCTO\b',
+    r'\bCIO\b',
+    r'\bCMO\b',
+    r'\bCHRO\b',
+    r'\bCLO\b',
+    r'\bCPO\b',
+    r'\bCRO\b',
+    r'\bCOS\b',                     # Chief of Staff
+    r'\bCAO\b',                     # Chief Administrative Officer
+    r'\bCDO\b',                     # Chief Data Officer
+    r'\bCSO\b',                     # Chief Strategy/Security Officer
+    r'\bCXO\b',
+
+    # Spelled-out Chief roles
+    r'\bChief Executive Officer\b',
+    r'\bChief Operating Officer\b',
+    r'\bChief Operation Officer\b',     # common misspelling your boss mentioned
+    r'\bChief Financial Officer\b',
+    r'\bChief Finance Officer\b',
+    r'\bChief Technology Officer\b',
+    r'\bChief Information Officer\b',
+    r'\bChief Marketing Officer\b',
+    r'\bChief Human Resources Officer\b',
+    r'\bChief Revenue Officer\b',
+    r'\bChief Product Officer\b',
+    r'\bChief Data Officer\b',
+    r'\bChief Strategy Officer\b',
+    r'\bChief Security Officer\b',
+    r'\bChief Administrative Officer\b',
+    r'\bChief Experience Officer\b',
+    r'\bChief of Staff\b',
+
+    # Generic Chief or Chief + word
+    r'\bChief\b',
+    r'\bChief [A-Za-z]+\b',
+
+    # President / VP / Director tier
+    r'\bPresident\b',
+    r'\bVice President\b',
+    r'\bVice Prisident\b',             # your boss’ misspelling
+    r'\bVP\b',
+    r'\bV\.P\.\b',
+    r'\bEVP\b',                         # Executive VP
+    r'\bSVP\b',                         # Senior VP
+    r'\bAVP\b',                         # Assistant VP
+    r'\bVP of [A-Za-z]+\b',
+
+    # Director tier
+    r'\bDirector\b',
+    r'\bSenior Director\b',
+    r'\bSr Director\b',
+    r'\bSR Director\b',
+    r'\bExecutive Director\b',
+    r'\bManaging Director\b',
+
+    # Seniority titles
+    r'\bSenior\b',
+    r'\bSr\.\b',
+    r'\bPrincipal\b',
+    r'\bLead\b',
+    r'\bHead\b',
+    r'\bHead Of\b',
+
+    # Ownership, leadership, governance
+    r'\bOwner\b',
+    r'\bFounder\b',
+    r'\bCo[- ]?Founder\b',
+    r'\bChairman\b',
+    r'\bChair\b',
+    r'\bBoard Member\b',
+    r'\bBoard\b',
+    r'\bPartner\b',
+    r'\bExecutive\b',
+    r'\bLeader\b',
+
+    # Finance, investing, revenue
+    r'\bInvestor\b',
+    r'\bC Financial\b',
+    r'\bC Financing\b',
+    r'\bFinance\b',
+    r'\bFinancial\b',
+
+    # Manager tier
+    r'\bManager\b',
+    r'\bGeneral Manager\b',
+    r'\bGM\b'
+]
 
     exclusion_patterns = [
         r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b', r'\bengineering\b', r'\bclinical\b',
