@@ -428,20 +428,6 @@ def get_active_sales_users(sf_instance):
     }
     return user_dict
 
-priority_order = [
-                        'CEO', 'Chief Executive Officer', 'President', 'COO', 'CFO', 'CTO', 'CIO', 'CMO', 'Owner',
-                        'Founder', 'Chairman', 'MD', 'CAO', 'CRO', 'CHRO', 'CLO', 'CPO'
-                    ]
-
-def title_priority(title):
-    if not isinstance(title, str):
-        return 999
-
-    title_lower = title.lower()
-    for i, key in enumerate(priority_order):
-        if key.lower() in title_lower:
-            return i
-    return 999
 
 # =======================
 # Main Streamlit App
@@ -630,27 +616,26 @@ def main():
 
 
                     # Filter DataFrame based on selection
-                    
+                    filtered_df = df[df['Job Title'].isin(selected_titles) & df['PEO (Normalized)'].isin(selected_peos)]
+                    priority_order = [
+                        'CEO', 'President', 'COO', 'CFO', 'CTO', 'CIO', 'CMO', 'Owner',
+                        'Founder', 'Chairman', 'MD', 'CAO', 'CRO', 'CHRO', 'CLO', 'CPO'
+                    ]
 
-                    filtered_df = df[
-                        df['Job Title'].isin(selected_titles) &
-                        df['PEO (Normalized)'].isin(selected_peos)
-                    ].copy()
-
-                    filtered_df['priority'] = filtered_df['Job Title'].apply(title_priority)
-
-                    filtered_df = (
-                        filtered_df
-                        .sort_values(by=['Contact Company name', 'priority'])
-                        .drop_duplicates(subset=['Contact Company name'], keep='first')
-                        .drop(columns=['priority'])
+                    filtered_df['priority'] = filtered_df['Job Title'].apply(
+                        lambda x: priority_order.index(x) if x in priority_order else len(priority_order)
                     )
 
+                    filtered_df = filtered_df.sort_values(by=['Name', 'priority'])
+
+                    filtered_df = filtered_df.drop_duplicates(subset=['Name'], keep='first')
+
+                    filtered_df = filtered_df.drop(columns=['priority'])
+                    
                     st.session_state.filtered_df = filtered_df
 
                     st.write(f"### ✅ Filtered Data (Showing {len(filtered_df)} of {len(df)} rows):")
                     st.dataframe(filtered_df)
-
 
 
                     # Download filtered data
