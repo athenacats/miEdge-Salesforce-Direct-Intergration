@@ -676,7 +676,7 @@ def main():
                     filtered_df = df[df['PEO (Normalized)'].isin(selected_peos)]
 
                     # Enforce one lead per company
-                    filtered_df['__company_key'] = filtered_df['Contact Company name'].apply(normalize_company)
+                    filtered_df['__company_key'] = filtered_df['Name'].apply(normalize_company)
 
                     filtered_df = select_one_lead_per_company(filtered_df)
 
