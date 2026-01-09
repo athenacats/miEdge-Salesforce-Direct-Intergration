@@ -168,7 +168,7 @@ def push_to_salesforce(sf_instance, df, selected_object):
             user_name = st.session_state.sales_users.get(owner_id, owner_id)
             st.session_state.round_robin_index = (st.session_state.round_robin_index + 1) % total_users
             st.write("📋 Owner id", owner_id)
-            if owner_id == "0051U00000AVuYnQAL":
+            if owner_id == "0051U00000AVuYnQAL" or owner_id == "005Ql000003g6NRIAY" :
                 st.warning("⚠️ Skipping Barry (0051U00000AVuYnQAL) as lead owner.")
                 continue
         else:
@@ -428,6 +428,62 @@ def get_active_sales_users(sf_instance):
     }
     return user_dict
 
+EXECUTIVE_PRIORITY = {
+    'CEO': ['ceo', 'chief executive'],
+    'President': ['president'],
+    'COO': ['coo', 'chief operating'],
+    'CFO': ['cfo', 'chief financial'],
+    'CTO': ['cto', 'chief technology'],
+    'CIO': ['cio', 'chief information'],
+    'CMO': ['cmo', 'chief marketing'],
+    'Owner': ['owner', 'principal'],
+    'Founder': ['founder', 'co founder'],
+    'Chairman': ['chairman'],
+    'MD': ['managing director'],
+    'CAO': ['cao'],
+    'CRO': ['cro'],
+    'CHRO': ['chro'],
+    'CLO': ['clo'],
+    'CPO': ['cpo']
+}
+
+
+def job_title_rank(title):
+    if not title or pd.isna(title):
+        return 999
+
+    title = str(title).lower()
+
+    for idx, keywords in enumerate(EXECUTIVE_PRIORITY.values()):
+        if any(k in title for k in keywords):
+            return idx
+
+    return 998
+
+
+def select_one_lead_per_company(df):
+    selected_rows = []
+
+    for company, group in df.groupby('__company_key'):
+        group = group.copy()
+
+        # Add ranking
+        group['job_rank'] = group['Job Title'].apply(job_title_rank)
+
+        # Sort by best title first, then keep stable order
+        group = group.sort_values(by=['job_rank'])
+
+        # Always take the top row
+        selected_rows.append(group.iloc[0])
+
+    return pd.DataFrame(selected_rows).drop(columns=['job_rank', '__company_key'])
+
+
+def normalize_company(name):
+    if pd.isna(name) or not str(name).strip():
+        return "unknown_company"
+    return str(name).strip().lower()
+
 
 # =======================
 # Main Streamlit App
@@ -616,22 +672,14 @@ def main():
 
 
                     # Filter DataFrame based on selection
-                    filtered_df = df[df['Job Title'].isin(selected_titles) & df['PEO (Normalized)'].isin(selected_peos)]
-                    priority_order = [
-                        'CEO', 'President', 'COO', 'CFO', 'CTO', 'CIO', 'CMO', 'Owner',
-                        'Founder', 'Chairman', 'MD', 'CAO', 'CRO', 'CHRO', 'CLO', 'CPO'
-                    ]
+                   # Optional PEO filter stays
+                    filtered_df = df[df['PEO (Normalized)'].isin(selected_peos)]
 
-                    filtered_df['priority'] = filtered_df['Job Title'].apply(
-                        lambda x: priority_order.index(x) if x in priority_order else len(priority_order)
-                    )
+                    # Enforce one lead per company
+                    filtered_df['__company_key'] = filtered_df['Contact Company name'].apply(normalize_company)
 
-                    filtered_df = filtered_df.sort_values(by=['Name', 'priority'])
+                    filtered_df = select_one_lead_per_company(filtered_df)
 
-                    filtered_df = filtered_df.drop_duplicates(subset=['Name'], keep='first')
-
-                    filtered_df = filtered_df.drop(columns=['priority'])
-                    
                     st.session_state.filtered_df = filtered_df
 
                     st.write(f"### ✅ Filtered Data (Showing {len(filtered_df)} of {len(df)} rows):")
