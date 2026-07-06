@@ -454,6 +454,10 @@ def job_title_rank(title):
 
     title = str(title).lower()
 
+    # Non-executive titles should rank last
+    if not is_executive_title(title):
+        return 999
+
     for idx, keywords in enumerate(EXECUTIVE_PRIORITY.values()):
         if any(k in title for k in keywords):
             return idx
@@ -484,6 +488,19 @@ def select_one_lead_per_company(df):
 
     return pd.DataFrame(selected_rows).drop(columns=['job_rank', '__company_key'], errors='ignore')
 
+def get_company_column(df):
+    preferred_columns = [
+        'Contact Company name',
+        'Company',
+        'Company Name',
+        'Name'
+    ]
+
+    for col in preferred_columns:
+        if col in df.columns:
+            return col
+
+    return None
 
 def normalize_company(name):
     if pd.isna(name) or not str(name).strip():
@@ -682,6 +699,20 @@ def main():
                     # Start with all rows
                     filtered_df = df.copy()
 
+                    # Apply selected job title filter
+                    if selected_titles:
+                        filtered_df = filtered_df[
+                            filtered_df['Job Title']
+                            .fillna('')
+                            .astype(str)
+                            .isin(selected_titles)
+                        ].copy()
+
+                    # Keep only true executive titles
+                    filtered_df = filtered_df[
+                        filtered_df['Job Title'].apply(is_executive_title)
+                    ].copy()
+
                     # Only apply PEO filter if there are actual PEO values selected
                     if selected_peos and 'PEO (Normalized)' in filtered_df.columns:
                         filtered_df = filtered_df[
@@ -692,9 +723,16 @@ def main():
                             .isin(selected_peos)
                         ].copy()
 
-                    # Enforce one lead per company
-                    filtered_df['__company_key'] = filtered_df['Name'].apply(normalize_company)
+                    # Use the real company column for one-lead-per-company grouping
+                    company_col = get_company_column(filtered_df)
 
+                    if company_col is None:
+                        st.error("❌ Could not find a company column. Expected one of: Contact Company name, Company, Company Name, Name.")
+                        st.stop()
+
+                    filtered_df['__company_key'] = filtered_df[company_col].apply(normalize_company)
+
+                    # Enforce one top executive per company
                     filtered_df = select_one_lead_per_company(filtered_df)
 
                     st.session_state.filtered_df = filtered_df
