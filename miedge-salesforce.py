@@ -462,9 +462,12 @@ def job_title_rank(title):
 
 
 def select_one_lead_per_company(df):
+    if df.empty:
+        return df.drop(columns=['__company_key'], errors='ignore')
+
     selected_rows = []
 
-    for company, group in df.groupby('__company_key'):
+    for company, group in df.groupby('__company_key', dropna=False):
         group = group.copy()
 
         # Add ranking
@@ -476,7 +479,10 @@ def select_one_lead_per_company(df):
         # Always take the top row
         selected_rows.append(group.iloc[0])
 
-    return pd.DataFrame(selected_rows).drop(columns=['job_rank', '__company_key'])
+    if not selected_rows:
+        return df.drop(columns=['__company_key'], errors='ignore')
+
+    return pd.DataFrame(selected_rows).drop(columns=['job_rank', '__company_key'], errors='ignore')
 
 
 def normalize_company(name):
@@ -673,7 +679,18 @@ def main():
 
                     # Filter DataFrame based on selection
                    # Optional PEO filter stays
-                    filtered_df = df[df['PEO (Normalized)'].isin(selected_peos)]
+                    # Start with all rows
+                    filtered_df = df.copy()
+
+                    # Only apply PEO filter if there are actual PEO values selected
+                    if selected_peos and 'PEO (Normalized)' in filtered_df.columns:
+                        filtered_df = filtered_df[
+                            filtered_df['PEO (Normalized)']
+                            .fillna('')
+                            .astype(str)
+                            .str.strip()
+                            .isin(selected_peos)
+                        ].copy()
 
                     # Enforce one lead per company
                     filtered_df['__company_key'] = filtered_df['Name'].apply(normalize_company)
