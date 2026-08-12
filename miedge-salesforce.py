@@ -10,7 +10,7 @@ import warnings
 import os
 
 st.set_page_config(
-    page_title="ESI miEdge-Salesforce Integration PAT",  # This sets the title in the browser tab
+    page_title="ESI miEdge-Salesforce Integration",  # This sets the title in the browser tab
     page_icon="https://www.eesipeo.com/media/logoicon-copy-2-1.svg"  # This sets the favicon (can be an emoji or image URL)
 )
 
@@ -413,9 +413,20 @@ def job_title_selector(df):
     return selected_titles, selected_peos
 
 def get_active_sales_users(sf_instance):
-    return {
-        "005Ql000001QcfN": "Pat"
+    query = """
+    SELECT Id, Name FROM User
+    WHERE Profile.Name = 'Sales User' AND IsActive = TRUE
+    """
+    results = sf_instance.query_all(query)
+
+    excluded_names = {"Terry Hookstra"}
+    excluded_ids = {"005Ql00000CV3qkIAD"}
+    user_dict = {
+        user['Id']: user['Name']
+        for user in results['records']
+        if user['Id'] not in excluded_ids and user['Name'] not in excluded_names
     }
+    return user_dict
 
 EXECUTIVE_PRIORITY = {
     'CEO': ['ceo', 'chief executive'],
@@ -504,7 +515,7 @@ def main():
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="https://www.eesipeo.com/media/1-eESI_Logo_RevOut-1-4.png" alt="ESI Logo" width="100" height="auto">
-            <h1 style="margin: 0;">PAT ESI miEdge-Salesforce Integration</h1>
+            <h1 style="margin: 0;">ESI miEdge-Salesforce Integration</h1>
         </div>
     """, unsafe_allow_html=True)
 
