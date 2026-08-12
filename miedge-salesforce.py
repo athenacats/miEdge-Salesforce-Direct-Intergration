@@ -504,7 +504,7 @@ def main():
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="https://www.eesipeo.com/media/1-eESI_Logo_RevOut-1-4.png" alt="ESI Logo" width="100" height="auto">
-            <h1 style="margin: 0;">ESI miEdge-Salesforce Integration</h1>
+            <h1 style="margin: 0;">PAT ESI miEdge-Salesforce Integration</h1>
         </div>
     """, unsafe_allow_html=True)
 
