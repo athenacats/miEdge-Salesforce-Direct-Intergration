@@ -413,20 +413,9 @@ def job_title_selector(df):
     return selected_titles, selected_peos
 
 def get_active_sales_users(sf_instance):
-    query = """
-    SELECT Id, Name FROM User
-    WHERE Profile.Name = 'Sales User' AND IsActive = TRUE
-    """
-    results = sf_instance.query_all(query)
-
-    excluded_names = {"Terry Hookstra"}
-    excluded_ids = {"005Ql00000CV3qkIAD"}
-    user_dict = {
-        user['Id']: user['Name']
-        for user in results['records']
-        if user['Id'] not in excluded_ids and user['Name'] not in excluded_names
+    return {
+        "005Ql000001QcfN": "Pat"
     }
-    return user_dict
 
 EXECUTIVE_PRIORITY = {
     'CEO': ['ceo', 'chief executive'],
