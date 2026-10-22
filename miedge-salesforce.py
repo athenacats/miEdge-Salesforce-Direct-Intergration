@@ -501,27 +501,38 @@ def job_title_rank(title):
 
 
 def select_one_lead_per_company(df):
-    if df.empty:
-        return df.drop(columns=['__company_key'], errors='ignore')
+    # Require an email before ranking executives within each company.
+    if 'Contact Email' not in df.columns:
+        raise ValueError("The uploaded CSV must contain a 'Contact Email' column.")
 
-    selected_rows = []
+    candidates = df.copy()
+    candidates['Contact Email'] = (
+        candidates['Contact Email'].fillna('').astype(str).str.strip()
+    )
 
-    for company, group in df.groupby('__company_key', dropna=False):
-        group = group.copy()
+    # Basic format check; this does not verify mailbox deliverability.
+    has_email = candidates['Contact Email'].str.fullmatch(
+        r"[^\s@,;<>]+@[^\s@,;<>.]+(?:\.[^\s@,;<>.]+)+",
+        na=False
+    )
+    candidates = candidates.loc[
+        has_email & candidates['Job Title'].apply(is_executive_title)
+    ].copy()
 
-        # Add ranking
-        group['job_rank'] = group['Job Title'].apply(job_title_rank)
+    if candidates.empty:
+        return candidates.drop(columns=['__company_key'], errors='ignore')
 
-        # Sort by best title first, then keep stable order
-        group = group.sort_values(by=['job_rank'])
+    # Keep your existing executive priority order.
+    # Stable sorting preserves CSV order when two executives have the same rank.
+    ranks = candidates['Job Title'].apply(job_title_rank)
+    candidates = candidates.iloc[
+        ranks.reset_index(drop=True).sort_values(kind='stable').index
+    ]
 
-        # Always take the top row
-        selected_rows.append(group.iloc[0])
-
-    if not selected_rows:
-        return df.drop(columns=['__company_key'], errors='ignore')
-
-    return pd.DataFrame(selected_rows).drop(columns=['job_rank', '__company_key'], errors='ignore')
+    return (
+        candidates.drop_duplicates(subset=['__company_key'], keep='first')
+        .drop(columns=['__company_key'], errors='ignore')
+    )
 
 def get_company_column(df):
     preferred_columns = [
@@ -788,6 +799,11 @@ def main():
                         mime='text/csv'
                     )
 
+                    # No upload controls when no executive has an eligible email.
+                    if filtered_df.empty:
+                        st.warning("No executives with an email address in the expected format match the current filters.")
+                        return
+
                     # Push to Salesforce
                     selected_object = st.selectbox("📁 Select Salesforce Object to Push Data:", ['Lead'])
                     # Allow user to limit number of leads to send
@@ -812,3 +828,4 @@ def main():
 
 if __name__ == "__main__":
     main() 
+
