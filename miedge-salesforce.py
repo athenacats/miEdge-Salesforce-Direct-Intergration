@@ -88,7 +88,42 @@ def get_salesforce_token(auth_code):
 # =======================
 def is_executive_title(title):
     patterns = [
-        r'\bCEO\b', r'\bCFO\b', r'\bCTO\b', r'\bCIO\b', r'\bCOO\b', r'\bPresident\b',  r'\bCAO\b', r'\bOwner\b', r'\bCMO\b', r'\bCHRO\b', r'\bCLO\b', r'\bCPO\b', r'\bCRO\b', r'\bFounder\b', r'\bChairman\b', r'\bMD\b']
+    r'\bCEO\b',
+    r'\bCFO\b',
+    r'\bCTO\b',
+    r'\bCIO\b',
+    r'\bCOO\b',
+    r'\bPresident\b',
+    r'\bCAO\b',
+    r'\bOwner\b',
+    r'\bCMO\b',
+    r'\bCHRO\b',
+    r'\bCLO\b',
+    r'\bCPO\b',
+    r'\bCRO\b',
+    r'\bFounder\b',
+    r'\bChairman\b',
+    r'\bMD\b',
+    r'\bCDO\b',
+    r'\bCISO\b',
+    r'\bCCO\b',
+    r'\bCSO\b',
+    r'\bCBO\b',
+    r'\bCKO\b',
+    r'\bCQO\b',
+    r'\bCNO\b',
+    r'\bCMIO\b',
+    r'\bCTIO\b',
+    r'\bCPTO\b',
+    r'\bChief\b(?:[\s-]+\w+){1,6}[\s-]+Officer\b',
+    r'\bCo[\s-]?Founder\b',
+    r'\bCo[\s-]?Owner\b',
+    r'\bChairwoman\b',
+    r'\bChairperson\b',
+    r'\bManaging Director\b',
+    r'\bManaging Partner\b',
+    r'\bExecutive Director\b'
+    ]
 
     exclusion_patterns = [
         r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b', r'\bengineering\b', r'\bclinical\b',
