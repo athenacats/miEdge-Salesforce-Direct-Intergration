@@ -445,7 +445,7 @@ def get_active_sales_users(sf_instance):
     return user_dict
 
 def select_leads_per_company(df, max_per_company=7):
-    """Select distinct emailed contacts, covering functions before filling by seniority."""
+    """Prefer emailed contacts, then fill available places with named contacts without email."""
     if not 1 <= max_per_company <= 7:
         raise ValueError("Choose between 1 and 7 contacts per company.")
     company_col = get_company_column(df)
@@ -460,28 +460,59 @@ def select_leads_per_company(df, max_per_company=7):
     has_email = candidates['Contact Email'].str.fullmatch(
         r"[^\s@,;<>]+@[^\s@,;<>.]+(?:\.[^\s@,;<>.]+)+", na=False
     )
-    candidates = candidates.loc[has_email & candidates['__company_key'].ne('unknown_company')].copy()
+    # Invalid nonblank addresses are excluded rather than uploaded to Salesforce.
+    no_email = candidates['Contact Email'].eq('')
+    last_names = candidates.get('Contact Last Name', pd.Series('', index=candidates.index)).fillna('').astype(str).str.strip()
+    candidates['__has_email'] = has_email
+    candidates = candidates.loc[
+        candidates['__company_key'].ne('unknown_company')
+        & (has_email | (no_email & last_names.ne('')))
+    ].copy()
     candidates['PEO Contact Role'] = candidates['Job Title'].apply(peo_contact_group).fillna('Other selected title')
+    candidates['Email Availability'] = candidates['__has_email'].map({True: 'Email available', False: 'No email — fallback'})
     candidates['__rank'] = candidates['Job Title'].apply(job_title_rank)
-    candidates['__email_key'] = candidates['Contact Email'].str.casefold()
-    candidates = candidates.sort_values('__rank', kind='stable').drop_duplicates(
-        ['__company_key', '__email_key']
-    )
+    candidates = candidates.sort_values(['__has_email', '__rank'], ascending=[False, True], kind='stable')
+    # Deduplicate email addresses and named people; do not collapse everyone with a blank email.
+    seen_emails, seen_names, keep = set(), set(), []
+    for index, row in candidates.iterrows():
+        company = row['__company_key']
+        email = row['Contact Email'].casefold()
+        parts = [str(row.get(column, '') if pd.notna(row.get(column, '')) else '').strip().casefold()
+                 for column in ('Contact First Name', 'Contact Middle Name (or initial)', 'Contact Last Name')]
+        name = tuple(parts)
+        email_key, name_key = (company, email), (company, name)
+        has_name = bool(parts[2])
+        if (email and email_key in seen_emails) or (has_name and name_key in seen_names):
+            continue
+        keep.append(index)
+        if email:
+            seen_emails.add(email_key)
+        if has_name:
+            seen_names.add(name_key)
+    candidates = candidates.loc[keep]
     selected = []
     for _, company in candidates.groupby('__company_key', sort=False):
         chosen = []
-        for group in PEO_ROLE_PATTERNS:
-            matches = company.loc[company['PEO Contact Role'].eq(group)]
-            if not matches.empty and len(chosen) < max_per_company:
-                chosen.append(matches.index[0])
-        for index in company.index:
-            if len(chosen) >= max_per_company:
-                break
-            if index not in chosen:
-                chosen.append(index)
+        covered = set()
+        # Exhaust email-bearing options before considering a no-email fallback.
+        for email_available in (True, False):
+            tier = company.loc[company['__has_email'].eq(email_available)]
+            for group in PEO_ROLE_PATTERNS:
+                if group in covered:
+                    continue
+                matches = tier.loc[tier['PEO Contact Role'].eq(group)]
+                if not matches.empty and len(chosen) < max_per_company:
+                    chosen.append(matches.index[0])
+                    covered.add(group)
+            for index in tier.index:
+                if len(chosen) >= max_per_company:
+                    break
+                if index not in chosen:
+                    chosen.append(index)
+                    covered.add(tier.loc[index, 'PEO Contact Role'])
         selected.extend(chosen)
     return candidates.loc[selected].drop(
-        columns=['__company_key', '__rank', '__email_key']
+        columns=['__company_key', '__rank', '__has_email']
     ).reset_index(drop=True)
 
 
@@ -724,7 +755,7 @@ def main():
                         "Maximum contacts per company", min_value=1, max_value=7,
                         value=7, step=1,
                     )
-                    st.caption("Selects available contacts from this CSV, covering different PEO buying-team roles first. Requires a company name and an email in the expected format; mailbox delivery is not verified.")
+                    st.caption("Selects contacts from this CSV with emails first, covering different PEO roles within that group. Remaining places are filled with named contacts in your selected titles who have no email. Invalid nonblank emails are excluded; mailbox delivery is not verified.")
                     filtered_df = select_leads_per_company(filtered_df, max_per_company)
 
                     st.session_state.filtered_df = filtered_df
@@ -745,9 +776,9 @@ def main():
                         mime='text/csv'
                     )
 
-                    # No upload controls when no contact has an eligible email.
+                    # No upload controls when no eligible contacts remain.
                     if filtered_df.empty:
-                        st.warning("No contacts with a company name and an email address in the expected format match the current filters.")
+                        st.warning("No eligible contacts match the current filters. Contacts need a company name and either an email in the expected format or a last name for a no-email fallback.")
                         return
 
                     # Push to Salesforce
