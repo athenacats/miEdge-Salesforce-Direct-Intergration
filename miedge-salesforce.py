@@ -83,65 +83,46 @@ def get_salesforce_token(auth_code):
         st.error(f"❌ Salesforce Authentication Failed: {response.text}")
         return None
 
-# =======================
-# Helper Function to Detect C-Level Titles
-# =======================
-def is_executive_title(title):
-    patterns = [
-    r'\bCEO\b',
-    r'\bCFO\b',
-    r'\bCTO\b',
-    r'\bCIO\b',
-    r'\bCOO\b',
-    r'\bPresident\b',
-    r'\bCAO\b',
-    r'\bOwner\b',
-    r'\bCMO\b',
-    r'\bCHRO\b',
-    r'\bCLO\b',
-    r'\bCPO\b',
-    r'\bCRO\b',
-    r'\bFounder\b',
-    r'\bChairman\b',
-    r'\bMD\b',
-    r'\bCDO\b',
-    r'\bCISO\b',
-    r'\bCCO\b',
-    r'\bCSO\b',
-    r'\bCBO\b',
-    r'\bCKO\b',
-    r'\bCQO\b',
-    r'\bCNO\b',
-    r'\bCMIO\b',
-    r'\bCTIO\b',
-    r'\bCPTO\b',
-    r'\bChief\b(?:[\s-]+\w+){1,6}[\s-]+Officer\b',
-    r'\bCo[\s-]?Founder\b',
-    r'\bCo[\s-]?Owner\b',
-    r'\bChairwoman\b',
-    r'\bChairperson\b',
-    r'\bManaging Director\b',
-    r'\bManaging Partner\b',
-    r'\bExecutive Director\b'
+# PEO buying-team categories, ordered for a first pass across departments.
+PEO_ROLE_PATTERNS = {
+    "Ownership / leadership": r"\b(owner|founder|co[ -]?founder|principal|managing partner|CEO|chief executive officer|president|managing director|executive director)\b",
+    "Human resources": r"\b(HR|human resources|human resource|people operations|people and culture|people & culture|chief people officer|CHRO)\b",
+    "Finance": r"\b(CFO|chief financial officer|finance|financial|controller|comptroller|treasurer|accounting)\b",
+    "Operations": r"\b(COO|chief operating officer|operations|general manager|office manager|business manager|administration)\b",
+    "Payroll": r"\bpayroll\b",
+    "Benefits": r"\b(benefits|total rewards|compensation)\b",
+}
+
+
+def peo_contact_group(title):
+    if pd.isna(title):
+        return None
+    title = str(title).strip()
+    if re.search(r"\b(assistant to|executive assistant|administrative assistant|intern|trainee|former|retired)\b", title, re.I):
+        return None
+    # Specific functional responsibilities take precedence over generic leadership.
+    for group in ("Payroll", "Benefits", "Human resources", "Finance", "Operations"):
+        if re.search(PEO_ROLE_PATTERNS[group], title, re.I):
+            return group
+    if re.search(PEO_ROLE_PATTERNS["Ownership / leadership"], title, re.I):
+        # A departmental VP is not a company president.
+        if re.search(r"\b(vice[ -]?president|VP|SVP|EVP)\b", title, re.I):
+            return None
+        return "Ownership / leadership"
+    return None
+
+
+def job_title_rank(title):
+    title = re.sub(r"\bvice[ -]?president\b", "VP", str(title), flags=re.I)
+    levels = [
+        r"\b(owner|founder|co[ -]?founder|CEO|chief|CFO|COO|CHRO|president|managing partner|principal)\b",
+        r"\b(EVP|SVP|VP|vice[ -]?president|head)\b",
+        r"\b(director|controller|comptroller|treasurer)\b",
+        r"\b(manager|lead)\b",
     ]
+    return next((rank for rank, pattern in enumerate(levels)
+                 if re.search(pattern, title, re.I)), len(levels))
 
-    exclusion_patterns = [
-        r'\bHR\b', r'\bHuman Resources\b', r'\barchitect\b', r'\bcreative\b', r'\bcontent\b', r'\binnovation\b', r'\bscientist\b', r'\bnurse\b', r'\bmedical\b', r'\bpeople\b', r'\bPayroll\b', r'\bBenefits\b', r'\bAccounting\b', r'\bConstruction\b', r'\bEngineer\b', r'\bengineering\b', r'\bclinical\b',
-        r'\blending\b', r'\bresearch\b', r'\bclient\b', r'\bengine\b', r'\blearning\b', r'\bgovernment\b', r'\bloan\b',
-        r'\bmember\b', r'\btechnical\b', r'\bproperty\b', r'\bpolicy\b', r'\brevenue\b', r'\bgeology\b', r'\banalyst\b',
-        r'\baccountant\b', r'\bhealthcare\b', r'\bhealth\b', r'\bsecurity\b', r'\bcloud\b', r'\bclinic\b', r'\blegal\b', r'\bdrug\b', r'\bdiversity\b',
-        r'\bleasing\b', r'\bpastry\b', r'\butilities\b', r'\btreasurer\b', r'\bcontract\b', r'\blisting\b', r'\bgrants\b',
-        r'\bleadership\b', r'\bsports\b', r'\bquality\b', r'\btoxicology\b', r'\bpulmonary\b', r'\bmanufacturer\b',
-        r'\bindustry\b', r'\bchemistry\b', r'\bbiology\b', r'\blaboratory\b', r'\bspace\b', r'\bexecutive administrator\b',
-        r'\bpulmonary\b', r'\bvirtual\b', r'\bquality\b', r'\bphaermaceuticl\b', r'\bscience\b', r'\bsciences\b', r'\bprofessional\b',
-        r'\bparalegal\b', r'\bmembership\b', r'\bdonor\b', r'\bcurriculum\b', r'\bbioanalytics\b'
-    ]
-
-    if any(re.search(pattern, str(title), re.IGNORECASE) for pattern in patterns):
-        if not any(re.search(excl_pattern, str(title), re.IGNORECASE) for excl_pattern in exclusion_patterns):
-            return True
-
-    return False
 
 # =======================
 # Function to Push Data to Salesforce
@@ -381,10 +362,10 @@ def job_title_selector(df):
 
     # Extract unique job titles
     unique_job_titles = sorted(df['Job Title'].dropna().unique().tolist())
-    unique_peos = sorted(df['PEO (Normalized)'].dropna().unique().tolist())
+    unique_peos = sorted(df.get('PEO (Normalized)', pd.Series(dtype=str)).dropna().astype(str).str.strip().unique().tolist())
 
-    # Pre-select executive titles
-    preselected_titles = [title for title in unique_job_titles if is_executive_title(title)]
+    # Pre-select relevant PEO buying-team titles
+    preselected_titles = [title for title in unique_job_titles if peo_contact_group(title) is not None]
     unselected_titles = [title for title in unique_job_titles if title not in preselected_titles]
 
     # Add emojis for visual distinction
@@ -426,9 +407,9 @@ def job_title_selector(df):
     # Use expander for dropdown effect
     with st.expander(f"🔽 Show/Hide Job Titles ({len(preselected_titles)} pre-selected)"):
         selected_display_titles = st.multiselect(
-            "✅ Pre-selected C-Level and Executive Titles. To add a title, click anywhere in the dropdown. To remove a title, click X",
+            "✅ Pre-selected PEO contacts across leadership, HR, finance, operations, payroll and benefits. To add a title, click anywhere in the dropdown. To remove a title, click X",
             options=combined_titles_display,  # All titles shown with emojis
-            default=preselected_titles_display,  # Preselect executive titles
+            default=preselected_titles_display,  # Preselect PEO contacts
             key="job_titles"
         )
 
@@ -463,76 +444,46 @@ def get_active_sales_users(sf_instance):
     }
     return user_dict
 
-EXECUTIVE_PRIORITY = {
-    'CEO': ['ceo', 'chief executive'],
-    'President': ['president'],
-    'COO': ['coo', 'chief operating'],
-    'CFO': ['cfo', 'chief financial'],
-    'CTO': ['cto', 'chief technology'],
-    'CIO': ['cio', 'chief information'],
-    'CMO': ['cmo', 'chief marketing'],
-    'Owner': ['owner', 'principal'],
-    'Founder': ['founder', 'co founder'],
-    'Chairman': ['chairman'],
-    'MD': ['managing director'],
-    'CAO': ['cao'],
-    'CRO': ['cro'],
-    'CHRO': ['chro'],
-    'CLO': ['clo'],
-    'CPO': ['cpo']
-}
-
-
-def job_title_rank(title):
-    if not title or pd.isna(title):
-        return 999
-
-    title = str(title).lower()
-
-    # Non-executive titles should rank last
-    if not is_executive_title(title):
-        return 999
-
-    for idx, keywords in enumerate(EXECUTIVE_PRIORITY.values()):
-        if any(k in title for k in keywords):
-            return idx
-
-    return 998
-
-
-def select_one_lead_per_company(df):
-    # Require an email before ranking executives within each company.
-    if 'Contact Email' not in df.columns:
-        raise ValueError("The uploaded CSV must contain a 'Contact Email' column.")
-
-    candidates = df.copy()
-    candidates['Contact Email'] = (
-        candidates['Contact Email'].fillna('').astype(str).str.strip()
-    )
-
-    # Basic format check; this does not verify mailbox deliverability.
+def select_leads_per_company(df, max_per_company=7):
+    """Select distinct emailed contacts, covering functions before filling by seniority."""
+    if not 1 <= max_per_company <= 7:
+        raise ValueError("Choose between 1 and 7 contacts per company.")
+    company_col = get_company_column(df)
+    if company_col is None:
+        raise ValueError("The uploaded CSV must contain a company column.")
+    for column in ("Contact Email", "Job Title"):
+        if column not in df.columns:
+            raise ValueError(f"The uploaded CSV must contain a '{column}' column.")
+    candidates = df.copy().reset_index(drop=True)
+    candidates['Contact Email'] = candidates['Contact Email'].fillna('').astype(str).str.strip()
+    candidates['__company_key'] = candidates[company_col].apply(normalize_company)
     has_email = candidates['Contact Email'].str.fullmatch(
-        r"[^\s@,;<>]+@[^\s@,;<>.]+(?:\.[^\s@,;<>.]+)+",
-        na=False
+        r"[^\s@,;<>]+@[^\s@,;<>.]+(?:\.[^\s@,;<>.]+)+", na=False
     )
-    candidates = candidates.loc[
-        has_email & candidates['Job Title'].apply(is_executive_title)
-    ].copy()
-
-    if candidates.empty:
-        return candidates.drop(columns=['__company_key'], errors='ignore')
-
-    # Keep your existing executive priority order.
-    # Stable sorting preserves CSV order when two executives have the same rank.
-    ranks = candidates['Job Title'].apply(job_title_rank)
-    candidates = candidates.iloc[
-        ranks.reset_index(drop=True).sort_values(kind='stable').index
-    ]
-
-    return (
-        candidates.drop_duplicates(subset=['__company_key'], keep='first')
-        .drop(columns=['__company_key'], errors='ignore')
+    candidates = candidates.loc[has_email & candidates['__company_key'].ne('unknown_company')].copy()
+    candidates['PEO Contact Role'] = candidates['Job Title'].apply(peo_contact_group).fillna('Other selected title')
+    candidates['__rank'] = candidates['Job Title'].apply(job_title_rank)
+    candidates['__email_key'] = candidates['Contact Email'].str.casefold()
+    candidates = candidates.sort_values('__rank', kind='stable').drop_duplicates(
+        ['__company_key', '__email_key']
     )
+    selected = []
+    for _, company in candidates.groupby('__company_key', sort=False):
+        chosen = []
+        for group in PEO_ROLE_PATTERNS:
+            matches = company.loc[company['PEO Contact Role'].eq(group)]
+            if not matches.empty and len(chosen) < max_per_company:
+                chosen.append(matches.index[0])
+        for index in company.index:
+            if len(chosen) >= max_per_company:
+                break
+            if index not in chosen:
+                chosen.append(index)
+        selected.extend(chosen)
+    return candidates.loc[selected].drop(
+        columns=['__company_key', '__rank', '__email_key']
+    ).reset_index(drop=True)
+
 
 def get_company_column(df):
     preferred_columns = [
@@ -745,18 +696,9 @@ def main():
                     # Start with all rows
                     filtered_df = df.copy()
 
-                    # Apply selected job title filter
-                    if selected_titles:
-                        filtered_df = filtered_df[
-                            filtered_df['Job Title']
-                            .fillna('')
-                            .astype(str)
-                            .isin(selected_titles)
-                        ].copy()
-
-                    # Keep only true executive titles
+                    # An empty title selection means no contacts are selected.
                     filtered_df = filtered_df[
-                        filtered_df['Job Title'].apply(is_executive_title)
+                        filtered_df['Job Title'].fillna('').astype(str).isin(selected_titles)
                     ].copy()
 
                     # Only apply PEO filter if there are actual PEO values selected
@@ -778,8 +720,12 @@ def main():
 
                     filtered_df['__company_key'] = filtered_df[company_col].apply(normalize_company)
 
-                    # Enforce one top executive per company
-                    filtered_df = select_one_lead_per_company(filtered_df)
+                    max_per_company = st.number_input(
+                        "Maximum contacts per company", min_value=1, max_value=7,
+                        value=7, step=1,
+                    )
+                    st.caption("Selects available contacts from this CSV, covering different PEO buying-team roles first. Requires a company name and an email in the expected format; mailbox delivery is not verified.")
+                    filtered_df = select_leads_per_company(filtered_df, max_per_company)
 
                     st.session_state.filtered_df = filtered_df
 
@@ -795,13 +741,13 @@ def main():
                     st.download_button(
                         label="📥 Download Filtered Data as CSV",
                         data=csv_data,
-                        file_name='filtered_executive_data.csv',
+                        file_name='filtered_peo_contacts.csv',
                         mime='text/csv'
                     )
 
-                    # No upload controls when no executive has an eligible email.
+                    # No upload controls when no contact has an eligible email.
                     if filtered_df.empty:
-                        st.warning("No executives with an email address in the expected format match the current filters.")
+                        st.warning("No contacts with a company name and an email address in the expected format match the current filters.")
                         return
 
                     # Push to Salesforce
