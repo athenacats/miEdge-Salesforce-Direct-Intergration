@@ -64,6 +64,39 @@ class ContactSelectionTests(unittest.TestCase):
         for title in ['CTO', 'VP Sales', 'Vice President Marketing', 'Executive Assistant to CEO', 'Retired Owner', None]:
             self.assertIsNone(classify(title), title)
 
+    def test_email_priority_over_seniority_and_department(self):
+        df = contacts(['Owner', 'HR Manager', 'CFO', 'Payroll Manager'])
+        df['Contact Last Name'] = ['Owner', 'HR', 'Finance', 'Payroll']
+        df.loc[0, 'Contact Email'] = ''
+        result = select(df, 3)
+        self.assertNotIn('Owner', result['Job Title'].tolist())
+        self.assertTrue(result['Contact Email'].ne('').all())
+
+    def test_fill_remaining_places_with_distinct_no_email_people(self):
+        df = contacts(['CEO', 'HR Director', 'Payroll Manager', 'Benefits Manager'])
+        df['Contact Last Name'] = ['Leader', 'Human', 'Payroll', 'Benefits']
+        df.loc[1:, 'Contact Email'] = ''
+        result = select(df, 3)
+        self.assertEqual(result['Job Title'].tolist(), ['CEO', 'HR Director', 'Payroll Manager'])
+        self.assertEqual(result['Email Availability'].tolist(),
+                         ['Email available', 'No email — fallback', 'No email — fallback'])
+
+    def test_all_without_email_still_covers_departments(self):
+        df = contacts(['CEO', 'Owner', 'HR Manager', 'CFO'])
+        df['Contact Last Name'] = ['Leader', 'Owner', 'Human', 'Finance']
+        df['Contact Email'] = None
+        result = select(df, 3)
+        self.assertEqual(result['Job Title'].tolist(), ['CEO', 'HR Manager', 'CFO'])
+
+    def test_same_person_with_and_without_email_prefers_email(self):
+        df = contacts(['Owner', 'HR Manager'])
+        df['Contact First Name'] = 'Alex'
+        df['Contact Last Name'] = 'Smith'
+        df.loc[0, 'Contact Email'] = ''
+        result = select(df)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result.iloc[0]['Job Title'], 'HR Manager')
+
     def test_empty_missing_columns_and_manual_title(self):
         df = contacts(['IT Director'])
         self.assertEqual(select(df).iloc[0]['PEO Contact Role'], 'Other selected title')
